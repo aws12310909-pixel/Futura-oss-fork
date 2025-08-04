@@ -1,0 +1,56 @@
+# 認証コードベース検証への移行オプション
+
+# パターン1: 既存ユーザー影響最小限の移行
+resource "aws_cognito_user_pool" "email_verification_enabled" {
+  name = "${var.project_name}-${var.environment}-user-pool"
+
+  # メール検証を有効化
+  auto_verified_attributes = ["email"]
+  
+  # メール検証設定
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"  # 認証コード方式
+    email_message        = "あなたの認証コードは {####} です。"
+    email_subject        = "BTC Mock App - メールアドレス認証"
+  }
+
+  # アカウント復旧もメール認証ベース
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+
+  # メール設定
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+    # または SESを使用する場合:
+    # email_sending_account = "DEVELOPER"
+    # source_arn = "arn:aws:ses:region:account:identity/domain.com"
+  }
+
+  # ユーザー名属性を指定（メールアドレスをユーザー名として使用）
+  username_attributes = ["email"]
+
+  # エイリアス属性（メールでログイン可能）
+  alias_attributes = ["email"]
+}
+
+# パターン2: 新規ユーザー作成時の動作
+resource "aws_cognito_user" "new_user_with_verification" {
+  user_pool_id = aws_cognito_user_pool.main.id
+  username     = "newuser@example.com"
+
+  attributes = {
+    email          = "newuser@example.com"
+    name           = "New User"
+    # email_verified を true にしない（検証プロセスを通す）
+  }
+
+  # 一時パスワード設定
+  temporary_password = "TempPass123!"
+  
+  # メール送信を有効化（本格運用時）
+  # message_action = "RESEND"  # 検証メールを送信
+}

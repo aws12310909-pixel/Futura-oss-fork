@@ -1,0 +1,207 @@
+# BTC Mock App - Cursor Rules
+
+## Project Overview
+You are working on BTC Mock App, a Bitcoin portfolio management simulation application built with Nuxt 3, Vue.js, and AWS services.
+
+## Tech Stack
+- **Frontend**: Nuxt 3, Vue.js 3, TypeScript
+- **UI Framework**: Vuetify 3 + Tailwind CSS (hybrid approach)
+- **Backend**: Nuxt Server API (Nitro)
+- **Database**: AWS DynamoDB
+- **Authentication**: AWS Cognito User Pool
+- **File Storage**: AWS S3
+- **Infrastructure**: Terraform
+- **Deployment**: AWS Lambda (Amplify)
+
+## Architecture Patterns
+
+### 1. File Organization
+- `/components/` - Vue components organized by feature (admin/, auth/, common/, layout/, user/)
+- `/pages/` - Nuxt pages with automatic routing
+- `/server/api/` - API endpoints following REST conventions
+- `/composables/` - Vue composables for shared logic
+- `/types/` - TypeScript type definitions
+- `/stores/` - Pinia state management
+- `/infra/` - Terraform infrastructure code
+
+### 2. API Design
+- Follow RESTful conventions
+- Use TypeScript interfaces for request/response types
+- Implement proper error handling with HTTP status codes
+- All APIs use authentication via cookies (requireAuth/requirePermission)
+- Return standardized response format: `{ success: boolean, data?: T, message?: string }`
+
+### 3. Database Design
+- DynamoDB NoSQL approach
+- Use composite keys (PK + SK) where appropriate
+- Implement GSI for different query patterns
+- Follow the established table structure (users, transactions, market_rates, sessions, permissions)
+
+## Coding Standards
+
+### TypeScript
+- Use strict TypeScript configuration
+- Define interfaces in `/types/index.ts`
+- Prefer explicit typing over `any`
+- Use proper generic types for API responses
+- Follow consistent naming: PascalCase for interfaces, camelCase for variables
+
+### Vue.js/Nuxt
+- Use Composition API with `<script setup>` syntax
+- Implement proper error boundaries
+- Use Nuxt auto-imports for composables
+- Follow Vue 3 reactivity patterns (`ref`, `reactive`, `computed`)
+- Use `definePageMeta` for page-level configurations
+
+### Component Structure
+```vue
+<template>
+  <!-- Use semantic HTML with proper accessibility -->
+</template>
+
+<script setup lang="ts">
+// 1. Imports (Nuxt auto-imports don't need explicit imports)
+// 2. Props/Emits definitions
+// 3. Reactive state
+// 4. Computed properties
+// 5. Methods/Functions
+// 6. Lifecycle hooks
+</script>
+```
+
+### CSS/Styling
+- **Primary**: Use Vuetify components for main UI elements
+- **Secondary**: Use Tailwind for spacing, layout utilities
+- Avoid style conflicts between Vuetify and Tailwind
+- Use design tokens from Vuetify theme configuration
+- Prefer utility classes over custom CSS
+
+## AWS Integration
+
+### DynamoDB
+- Use the `getDynamoDBService()` utility
+- Implement proper error handling for AWS operations
+- Use appropriate DynamoDB operations (get, put, query, scan)
+- Follow established naming patterns for table names
+
+### Cognito
+- User authentication handled via AWS Cognito User Pool
+- Use group-based permissions (admin/user)
+- Session management via HTTP-only cookies
+- Implement proper token validation
+
+### S3
+- File uploads for profile images
+- Use presigned URLs for secure access
+- Implement proper file validation (type, size)
+
+## Security Guidelines
+- Never expose AWS credentials in frontend code
+- Use server-side authentication for all protected routes
+- Implement proper input validation and sanitization
+- Use HTTP-only cookies for session management
+- Follow principle of least privilege for permissions
+
+## Data Flow Patterns
+
+### Authentication Flow
+1. User login via Cognito
+2. Server sets HTTP-only session cookies
+3. Subsequent requests automatically authenticated
+4. Permissions checked against DynamoDB permissions table
+
+### API Request Pattern
+```typescript
+// Always use proper error handling
+try {
+  const response = await $fetch('/api/endpoint', {
+    method: 'POST',
+    body: requestData
+  })
+  // Handle success
+} catch (error) {
+  // Handle error appropriately
+}
+```
+
+## Permission System
+- Two roles: `admin` and `user`
+- Admin permissions: Full CRUD operations, user management, transaction creation
+- User permissions: Read own data, update profile, view dashboard
+- Use `requirePermission(event, 'permission:action')` in API routes
+
+## Error Handling
+- Use `createError()` for API errors with proper HTTP status codes
+- Implement user-friendly error messages in UI
+- Log errors appropriately without exposing sensitive information
+- Use try-catch blocks for async operations
+
+## Testing Considerations
+- Use test accounts: admin@example.com / user@example.com
+- Mock AWS services in development
+- Test both success and error scenarios
+- Validate input/output types match TypeScript interfaces
+
+## Performance Guidelines
+- Use DynamoDB pagination for large datasets
+- Implement proper loading states in UI
+- Use Vue's built-in optimization features (v-memo, defineAsyncComponent)
+- Optimize images for web (S3 upload validation)
+
+## Common Patterns
+
+### API Route Structure
+```typescript
+export default defineEventHandler(async (event) => {
+  try {
+    // 1. Authentication/Permission check
+    const currentUser = await requirePermission(event, 'required:permission')
+    
+    // 2. Input validation
+    const body = await readBody<TypedRequest>(event)
+    
+    // 3. Business logic
+    const result = await performOperation(body)
+    
+    // 4. Return standardized response
+    return {
+      success: true,
+      data: result,
+      message: 'Operation completed successfully'
+    }
+  } catch (error) {
+    // Handle and return appropriate error
+  }
+})
+```
+
+### Component Data Fetching
+```vue
+<script setup lang="ts">
+const { data: users, pending } = await $fetch('/api/users')
+
+// Or with composables
+const { users, loading, error, refresh } = await useUsers()
+</script>
+```
+
+## File Naming Conventions
+- Components: PascalCase (e.g., `UserDetailsDialog.vue`)
+- Pages: kebab-case (e.g., `change-password.vue`)
+- API routes: RESTful with proper HTTP methods
+- Types: PascalCase interfaces (e.g., `User`, `Transaction`)
+
+## Development Workflow
+- Use TypeScript strict mode
+- Follow established component organization
+- Implement proper error boundaries
+- Use Nuxt DevTools for debugging
+- Test with both admin and user accounts
+
+## Documentation
+- Document complex business logic
+- Use TSDoc comments for public APIs
+- Update type definitions when data structures change
+- Maintain API documentation consistency
+
+Remember: This is a Bitcoin portfolio simulation app, so ensure all financial calculations are accurate and properly validated. Always prioritize security and data integrity in financial applications.

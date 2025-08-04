@@ -1,0 +1,19 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+backend.hcl
+tfplan
+crash.log
+crash.*.log
+
+# Lambda deployment artifacts
+*.zip
+placeholder.zip
+
+# OS files
+.DS_Store
+Thumbs.db
