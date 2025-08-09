@@ -9,7 +9,6 @@ frontend:
     # IMPORTANT - Please verify your build commands
     preBuild:
       commands:
-        - cd src
         - npm ci
     build:
       commands:
