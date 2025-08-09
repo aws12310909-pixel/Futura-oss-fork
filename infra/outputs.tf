@@ -37,8 +37,3 @@ output "admin_user_email" {
   description = "Administrator user email"
   value       = module.cognito.admin_user_email
 }
-
-output "test_user_email" {
-  description = "Test user email"
-  value       = module.cognito.test_user_email
-}

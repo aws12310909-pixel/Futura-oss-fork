@@ -27,8 +27,3 @@ output "admin_user_email" {
   description = "初期管理者ユーザーのメールアドレス"
   value       = aws_cognito_user.admin.attributes.email
 }
-
-output "test_user_email" {
-  description = "テストユーザーのメールアドレス"
-  value       = aws_cognito_user.test_user.attributes.email
-}
