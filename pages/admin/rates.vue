@@ -220,11 +220,14 @@ const loadRates = async () => {
   try {
     const [ratesResponse, latestResponse] = await Promise.all([
       $fetch<{ success: boolean; data: { items: MarketRate[] } }>('/api/market-rates'),
-      $fetch<{ success: boolean; data: MarketRate[] }>('/api/market-rates/latest')
+      $fetch<{ success: boolean; data: MarketRate }>('/api/market-rates/latest')
     ])
 
+    console.log('ratesResponse', ratesResponse)
+    console.log('latestResponse', latestResponse)
+
     rates.value = ratesResponse.data.items
-    latestRate.value = latestResponse.data[0] || null
+    latestRate.value = latestResponse.data || null
   } catch (error) {
     logger.error('相場データの読み込みに失敗しました:', error)
     showError('相場データの取得に失敗しました')

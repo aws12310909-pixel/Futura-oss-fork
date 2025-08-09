@@ -29,6 +29,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<CognitoGrou
       })
     }
 
+    // システムグループ名の重複を防ぐ
+    if (body.groupName === 'administrator' || body.groupName === 'user') {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Cannot create a group with system group name: ${body.groupName}`
+      })
+    }
+
     const groupData: GroupCreateForm = {
       groupName: body.groupName.trim(),
       description: body.description?.trim(),

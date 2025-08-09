@@ -97,6 +97,15 @@
               <Icon name="mdi:shield" class="mr-1" />
               管理者
             </v-chip>
+            <v-chip
+              v-else-if="item.GroupName === 'user'"
+              color="primary"
+              size="small"
+              variant="flat"
+            >
+              <Icon name="mdi:account" class="mr-1" />
+              一般ユーザー
+            </v-chip>
             <span class="font-medium">{{ item.GroupName }}</span>
           </div>
         </template>
@@ -140,7 +149,7 @@
               @click="openUserManagementDialog(item)"
             />
             <v-btn
-              v-if="item.GroupName !== 'administrator'"
+              v-if="!isSystemGroup(item.GroupName)"
               size="small"
               variant="text"
               color="primary"
@@ -148,13 +157,26 @@
               @click="openEditDialog(item)"
             />
             <v-btn
-              v-if="item.GroupName !== 'administrator'"
+              v-if="!isSystemGroup(item.GroupName)"
               size="small"
               variant="text"
               color="error"
               prepend-icon="mdi-delete"
               @click="deleteGroup(item)"
             />
+            <v-tooltip v-else>
+              <template #activator="{ props: tooltipProps }">
+                <v-btn
+                  v-bind="tooltipProps"
+                  size="small"
+                  variant="text"
+                  color="grey"
+                  icon="mdi-lock"
+                  disabled
+                />
+              </template>
+              システムグループは編集・削除できません
+            </v-tooltip>
           </div>
         </template>
       </v-data-table>
@@ -235,7 +257,7 @@ const administratorGroupExists = computed(() =>
 )
 
 const customGroupsCount = computed(() => 
-  groups.value.filter(group => group.GroupName !== 'administrator').length
+  groups.value.filter(group => !isSystemGroup(group.GroupName)).length
 )
 
 // Methods
@@ -302,6 +324,10 @@ const handleUserGroupUpdated = () => {
 }
 
 // Utility functions
+const isSystemGroup = (groupName: string): boolean => {
+  return groupName === 'administrator' || groupName === 'user'
+}
+
 const getPrecedenceColor = (precedence?: number) => {
   if (!precedence) return 'grey'
   if (precedence <= 10) return 'error'

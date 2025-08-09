@@ -1,4 +1,4 @@
-import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminAddUserToGroupCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminAddUserToGroupCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 import { getDynamoDBService } from '~/server/utils/dynamodb'
 import { useLogger } from '~/composables/useLogger'
 import type { User, UserCreateForm } from '~/types'
@@ -56,6 +56,37 @@ export default defineEventHandler(async (event) => {
 
     await cognitoClient.send(addToGroupCommand)
 
+    // Get user details including sub from Cognito
+    const getUserCommand = new AdminGetUserCommand({
+      UserPoolId: config.public.cognitoUserPoolId,
+      Username: email
+    })
+
+    const userDetailsResponse = await cognitoClient.send(getUserCommand)
+    
+    if (!userDetailsResponse.UserAttributes) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to get user details from Cognito'
+      })
+    }
+
+    // Extract sub (user ID) from user attributes
+    const userAttributes = userDetailsResponse.UserAttributes.reduce((acc, attr) => {
+      if (attr.Name && attr.Value) {
+        acc[attr.Name] = attr.Value
+      }
+      return acc
+    }, {} as Record<string, string>)
+
+    const userId = userAttributes.sub
+    if (!userId) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to get user sub from Cognito'
+      })
+    }
+
     // Generate dummy BTC address
     const btcAddress = `1${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
     
@@ -63,7 +94,6 @@ export default defineEventHandler(async (event) => {
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
     
-    const userId = cognitoResponse.User.Username
     const now = new Date().toISOString()
 
     const user: User = {

@@ -98,6 +98,21 @@ resource "aws_cognito_user_pool" "main" {
   }
 }
 
+# Cognito グループ
+resource "aws_cognito_user_group" "administrator" {
+  name         = "administrator"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "システム管理者グループ - すべての機能にアクセス可能"
+  precedence   = 0
+}
+
+resource "aws_cognito_user_group" "user" {
+  name         = "user"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "一般ユーザーグループ - 基本機能にアクセス可能"
+  precedence   = 10
+}
+
 # 初期管理者ユーザー（環境対応版）
 resource "aws_cognito_user" "admin" {
   user_pool_id = aws_cognito_user_pool.main.id
@@ -122,28 +137,7 @@ resource "aws_cognito_user" "admin" {
   }
 }
 
-# テスト用一般ユーザー（環境対応版）
-resource "aws_cognito_user" "test_user" {
-  user_pool_id = aws_cognito_user_pool.main.id
-  username     = "user@example.com"
 
-  attributes = {
-    email = "user@example.com"
-    name  = "Test User"
-    # 本番環境では email_verified を設定しない
-    email_verified = var.enable_email_verification ? null : "true"
-  }
-
-  temporary_password = "TempUser123!"
-  message_action     = var.enable_email_verification ? "RESEND" : "SUPPRESS"
-
-  lifecycle {
-    ignore_changes = [
-      temporary_password,
-      password
-    ]
-  }
-}
 
 # 管理者ユーザーのグループメンバーシップ
 resource "aws_cognito_user_in_group" "admin_membership" {

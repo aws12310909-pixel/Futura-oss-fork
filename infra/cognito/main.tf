@@ -136,6 +136,13 @@ resource "aws_cognito_user_group" "administrator" {
   precedence   = 0
 }
 
+resource "aws_cognito_user_group" "user" {
+  name         = "user"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "一般ユーザーグループ - 基本機能にアクセス可能"
+  precedence   = 10
+}
+
 # 初期管理者ユーザー
 resource "aws_cognito_user" "admin" {
   user_pool_id = aws_cognito_user_pool.main.id
@@ -158,27 +165,7 @@ resource "aws_cognito_user" "admin" {
   }
 }
 
-# テスト用一般ユーザー
-resource "aws_cognito_user" "test_user" {
-  user_pool_id = aws_cognito_user_pool.main.id
-  username     = "user@example.com" # メールアドレスをユーザー名として使用
 
-  attributes = {
-    email          = "user@example.com"
-    name           = "Test User"
-    email_verified = "true"
-  }
-
-  temporary_password = "TempUser123!"
-  message_action     = "SUPPRESS" # メール送信を抑制
-
-  lifecycle {
-    ignore_changes = [
-      temporary_password,
-      password
-    ]
-  }
-}
 
 # 管理者ユーザーのグループメンバーシップ
 resource "aws_cognito_user_in_group" "admin_membership" {

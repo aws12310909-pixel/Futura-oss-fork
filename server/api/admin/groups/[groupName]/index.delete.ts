@@ -16,11 +16,11 @@ export default defineEventHandler(async (event): Promise<ApiResponse<void>> => {
       })
     }
 
-    // administratorグループの削除を防ぐ
-    if (groupName === 'administrator') {
+    // システムグループ（administrator、user）の削除を防ぐ
+    if (groupName === 'administrator' || groupName === 'user') {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Cannot delete the administrator group'
+        statusMessage: `Cannot delete the system group: ${groupName}`
       })
     }
 
