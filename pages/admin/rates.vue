@@ -5,13 +5,23 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">BTC相場価格設定</h1>
         <p class="text-gray-600">BTCの相場価格を設定して全ユーザーの資産価値を更新します</p>
       </div>
-      <v-btn
-        color="primary"
-                  prepend-icon="mdi-plus"
-        @click="showCreateDialog = true"
-      >
-        新しい相場価格を設定
-      </v-btn>
+      <div class="flex gap-3">
+        <v-btn
+          color="secondary"
+          variant="outlined"
+          prepend-icon="mdi-upload"
+          @click="showCSVUploadDialog = true"
+        >
+          CSV一括アップロード
+        </v-btn>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="showCreateDialog = true"
+        >
+          新しい相場価格を設定
+        </v-btn>
+      </div>
     </div>
 
     <!-- Current Rate Card -->
@@ -144,11 +154,17 @@
       :market-rate="selectedRate"
       @updated="handleRateUpdated"
     />
+
+    <!-- CSV Upload Dialog -->
+    <AdminCSVUploadDialog
+      v-model="showCSVUploadDialog"
+      @uploaded="handleCSVUploaded"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { MarketRate } from '~/types'
+import type { MarketRate, CSVUploadResponse } from '~/types'
 
 definePageMeta({
   middleware: 'auth',
@@ -169,6 +185,7 @@ const latestRate = ref<MarketRate | null>(null)
 const loading = ref(false)
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
+const showCSVUploadDialog = ref(false)
 const selectedRate = ref<MarketRate | null>(null)
 
 // Table headers
@@ -249,6 +266,11 @@ const openEditDialog = (rate: MarketRate) => {
 const handleRateUpdated = () => {
   showEditDialog.value = false
   selectedRate.value = null
+  loadRates()
+}
+
+const handleCSVUploaded = () => {
+  showCSVUploadDialog.value = false
   loadRates()
 }
 

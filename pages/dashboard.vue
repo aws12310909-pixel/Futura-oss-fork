@@ -15,20 +15,135 @@
       </v-btn>
     </div>
 
-    <!-- Price Chart - Full Width -->
+    <!-- BTC Rate History - Full Width -->
     <div class="mb-8">
       <v-card class="card-shadow">
         <v-card-title class="px-6 py-4 border-b">
-          <h3 class="text-lg font-semibold text-gray-900">残高推移（30日間）</h3>
+          <div class="flex items-center justify-between w-full">
+            <h3 class="text-lg font-semibold text-gray-900">BTC価格推移</h3>
+            <div class="flex items-center space-x-2">
+              <v-chip color="orange" size="small" variant="flat">
+                <Icon name="mdi:bitcoin" class="mr-1" />
+                市場レート
+              </v-chip>
+            </div>
+          </div>
         </v-card-title>
         <v-card-text class="p-6">
-          <div v-if="dashboardData?.balanceHistory.length" class="h-80">
-            <UserBalanceChart :data="dashboardData.balanceHistory" />
+          <div v-if="marketRates.length">
+            <!-- Rate Summary Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-orange-50 rounded-lg">
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">期間変動</p>
+                <p class="text-lg font-bold" :class="rateChangeClass">
+                  {{ rateChangeText }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最高価格</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(maxRate) }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最安価格</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(minRate) }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">平均価格</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(avgRate) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Rate Chart -->
+            <div class="h-64">
+              <UserBTCRateChart :data="marketRates" />
+            </div>
+          </div>
+          <div v-else class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div class="text-center">
+              <Icon name="mdi:chart-timeline-variant" class="text-4xl text-gray-400 mb-2" />
+              <p class="text-gray-500">相場データがありません</p>
+              <p class="text-sm text-gray-400 mt-2">管理者が相場レートを登録すると表示されます</p>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </div>
+
+    <!-- Asset History - Full Width -->
+    <div class="mb-8">
+      <v-card class="card-shadow">
+        <v-card-title class="px-6 py-4 border-b">
+          <div class="flex items-center justify-between w-full">
+            <h3 class="text-lg font-semibold text-gray-900">資産推移（30日間）</h3>
+            <div class="flex items-center space-x-2">
+              <v-btn-toggle
+                v-model="assetViewMode"
+                variant="outlined"
+                density="compact"
+                mandatory
+              >
+                <v-btn value="chart" size="small">
+                  <Icon name="mdi:chart-line" class="mr-1" />
+                  チャート
+                </v-btn>
+                <v-btn value="table" size="small">
+                  <Icon name="mdi:table" class="mr-1" />
+                  テーブル
+                </v-btn>
+              </v-btn-toggle>
+            </div>
+          </div>
+        </v-card-title>
+        <v-card-text class="p-6">
+          <div v-if="dashboardData?.balanceHistory.length">
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">30日間収益</p>
+                <p class="text-lg font-bold" :class="period30ChangeClass">
+                  {{ period30ChangeText }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最高値</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(maxValue) }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最安値</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(minValue) }}
+                </p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500 uppercase tracking-wider">平均値</p>
+                <p class="text-lg font-bold text-gray-900">
+                  ¥{{ formatNumber(avgValue) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Chart View -->
+            <div v-if="assetViewMode === 'chart'" class="h-80">
+              <UserBalanceChart :data="dashboardData.balanceHistory" />
+            </div>
+            <!-- Table View -->
+            <div v-else-if="assetViewMode === 'table'">
+              <UserAssetHistoryTable :data="dashboardData.balanceHistory" />
+            </div>
           </div>
           <div v-else class="h-80 flex items-center justify-center bg-gray-50 rounded-lg">
             <div class="text-center">
               <Icon name="mdi:chart-line" class="text-4xl text-gray-400 mb-2" />
-              <p class="text-gray-500">チャートデータがありません</p>
+              <p class="text-gray-500">資産データがありません</p>
+              <p class="text-sm text-gray-400 mt-2">取引を開始すると資産推移が表示されます</p>
             </div>
           </div>
         </v-card-text>
@@ -170,7 +285,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardData } from '~/types'
+import type { DashboardData, MarketRate } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-DASHBOARD]' })
 
@@ -186,7 +301,9 @@ const { showError } = useNotification()
 
 // State
 const dashboardData = ref<DashboardData | null>(null)
+const marketRates = ref<MarketRate[]>([])
 const loading = ref(false)
+const assetViewMode = ref<'chart' | 'table'>('chart')
 
 // Computed
 const currentRate = computed(() => {
@@ -230,12 +347,95 @@ const monthlyTransactionCount = computed(() => {
   ).length
 })
 
+// Asset history statistics
+const period30ChangeText = computed(() => {
+  if (!dashboardData.value?.balanceHistory.length || dashboardData.value.balanceHistory.length < 2) {
+    return '+0.00%'
+  }
+  
+  const history = dashboardData.value.balanceHistory
+  const current = history[history.length - 1].jpy_value
+  const initial = history[0].jpy_value
+  
+  if (initial === 0) return '+0.00%'
+  
+  const change = ((current - initial) / initial) * 100
+  const sign = change >= 0 ? '+' : ''
+  return `${sign}${change.toFixed(2)}%`
+})
+
+const period30ChangeClass = computed(() => {
+  const text = period30ChangeText.value
+  if (text.startsWith('+')) return 'text-green-600'
+  if (text.startsWith('-')) return 'text-red-600'
+  return 'text-gray-600'
+})
+
+const maxValue = computed(() => {
+  if (!dashboardData.value?.balanceHistory.length) return 0
+  return Math.max(...dashboardData.value.balanceHistory.map(item => item.jpy_value))
+})
+
+const minValue = computed(() => {
+  if (!dashboardData.value?.balanceHistory.length) return 0
+  return Math.min(...dashboardData.value.balanceHistory.map(item => item.jpy_value))
+})
+
+const avgValue = computed(() => {
+  if (!dashboardData.value?.balanceHistory.length) return 0
+  const sum = dashboardData.value.balanceHistory.reduce((acc, item) => acc + item.jpy_value, 0)
+  return Math.round(sum / dashboardData.value.balanceHistory.length)
+})
+
+// Market rate statistics
+const rateChangeText = computed(() => {
+  if (marketRates.value.length < 2) return '+0.00%'
+  
+  const sortedRates = [...marketRates.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  const initial = sortedRates[0].btc_jpy_rate
+  const current = sortedRates[sortedRates.length - 1].btc_jpy_rate
+  
+  if (initial === 0) return '+0.00%'
+  
+  const change = ((current - initial) / initial) * 100
+  const sign = change >= 0 ? '+' : ''
+  return `${sign}${change.toFixed(2)}%`
+})
+
+const rateChangeClass = computed(() => {
+  const text = rateChangeText.value
+  if (text.startsWith('+')) return 'text-green-600'
+  if (text.startsWith('-')) return 'text-red-600'
+  return 'text-gray-600'
+})
+
+const maxRate = computed(() => {
+  if (!marketRates.value.length) return 0
+  return Math.max(...marketRates.value.map(rate => rate.btc_jpy_rate))
+})
+
+const minRate = computed(() => {
+  if (!marketRates.value.length) return 0
+  return Math.min(...marketRates.value.map(rate => rate.btc_jpy_rate))
+})
+
+const avgRate = computed(() => {
+  if (!marketRates.value.length) return 0
+  const sum = marketRates.value.reduce((acc, rate) => acc + rate.btc_jpy_rate, 0)
+  return Math.round(sum / marketRates.value.length)
+})
+
 // Methods
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: DashboardData }>('/api/dashboard')
-    dashboardData.value = data
+    const [dashboardResponse, ratesResponse] = await Promise.all([
+      $fetch<{ success: boolean; data: DashboardData }>('/api/dashboard'),
+      $fetch<{ success: boolean; data: { items: MarketRate[] } }>('/api/market-rates?limit=30')
+    ])
+    
+    dashboardData.value = dashboardResponse.data
+    marketRates.value = ratesResponse.data.items || []
   } catch (error) {
     logger.error('ダッシュボードデータの読み込みに失敗しました:', error)
     showError('ダッシュボードデータの取得に失敗しました')

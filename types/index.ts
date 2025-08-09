@@ -197,6 +197,18 @@ export interface MarketRateUpdateForm {
   btc_jpy_rate: number
 }
 
+export interface MarketRateBulkCreateForm {
+  rates: MarketRateCreateForm[]
+}
+
+export interface CSVUploadResponse {
+  success: boolean
+  created_count: number
+  duplicates: MarketRateCreateForm[]
+  errors: string[]
+  message: string
+}
+
 // UI State types
 export interface LoadingState {
   [key: string]: boolean
