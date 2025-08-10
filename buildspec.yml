@@ -61,6 +61,9 @@ phases:
       # Copy server files directly to deploy directory (not the .output directory)
       - cp -r .output/server/* deploy/
       
+      # Copy public files (static assets) to deploy directory
+      - cp -r .output/public/* deploy/
+      
       # Display package size information (before moving to deploy directory)
       - echo "Package size information:"
       - du -sh deploy/
