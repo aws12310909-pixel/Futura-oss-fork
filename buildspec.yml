@@ -61,11 +61,9 @@ phases:
       # Copy built application to deploy directory
       - cp -r .output/* deploy/
       
-      # Copy package.json for Lambda runtime dependencies
+      # Copy package.json and node_modules for Lambda runtime dependencies
       - cp package.json deploy/
-      
-      # Install production dependencies in deploy directory
-      - cd deploy && npm ci --only=production --no-optional
+      - cp -r node_modules deploy/
       
       # Remove unnecessary files to reduce package size
       - rm -rf deploy/node_modules/@types
