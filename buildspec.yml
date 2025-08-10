@@ -37,11 +37,28 @@ phases:
       - echo ENV_FILE=$ENV_FILE
       - echo LAMBDA_FUNCTION_NAME=$LAMBDA_FUNCTION_NAME
       - echo CLOUDFRONT_DISTRIBUTION_ID=$CLOUDFRONT_DISTRIBUTION_ID
+      - echo S3_BUCKET_NAME=$S3_BUCKET_NAME
       - echo AWS_REGION=$AWS_REGION
       - echo NUXT_DYNAMODB_USERS_TABLE=$NUXT_DYNAMODB_USERS_TABLE
       - echo NUXT_PUBLIC_COGNITO_USER_POOL_ID=${NUXT_PUBLIC_COGNITO_USER_POOL_ID:0:10}...
       - echo NUXT_PUBLIC_COGNITO_CLIENT_ID=${NUXT_PUBLIC_COGNITO_CLIENT_ID:0:10}...
       - echo Environment variables loaded successfully
+
+      # Verify required environment variables are set
+      - |
+        if [ -z "$LAMBDA_FUNCTION_NAME" ]; then
+          echo "ERROR: LAMBDA_FUNCTION_NAME is not set"
+          exit 1
+        fi
+        if [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+          echo "ERROR: CLOUDFRONT_DISTRIBUTION_ID is not set"
+          exit 1
+        fi
+        if [ -z "$S3_BUCKET_NAME" ]; then
+          echo "ERROR: S3_BUCKET_NAME is not set"
+          exit 1
+        fi
+        echo "Required environment variables verified successfully"
 
   build:
     commands:
@@ -61,8 +78,9 @@ phases:
       # Copy server files directly to deploy directory (not the .output directory)
       - cp -r .output/server/* deploy/
       
-      # Copy public files (static assets) to deploy directory
-      - cp -r .output/public/* deploy/
+      # Upload static files to S3
+      - echo Uploading static files to S3 bucket
+      - aws s3 sync .output/public/ s3://$S3_BUCKET_NAME/ --delete
       
       # Display package size information (before moving to deploy directory)
       - echo "Package size information:"
