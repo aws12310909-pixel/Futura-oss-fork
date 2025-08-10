@@ -78,13 +78,10 @@ phases:
       # Upload to Lambda
       - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
       - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda-deployment.zip
-      
-      # Update Lambda function configuration
-      - echo Updating Lambda function configuration
-      - aws lambda update-function-configuration --function-name $LAMBDA_FUNCTION_NAME --runtime nodejs20.x --handler index.handler
-      
+
       # Wait for Lambda update to complete
       - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME
+
       
       # Clear CloudFront cache
       - echo Clearing CloudFront cache for distribution $CLOUDFRONT_DISTRIBUTION_ID
