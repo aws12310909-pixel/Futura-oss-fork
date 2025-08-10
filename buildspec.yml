@@ -66,16 +66,42 @@ phases:
       - cp -r node_modules deploy/
       
       # Remove unnecessary files to reduce package size
+      - echo "Removing unnecessary files to reduce package size..."
       - rm -rf deploy/node_modules/@types
       - rm -rf deploy/node_modules/typescript
       - rm -rf deploy/node_modules/eslint*
       - rm -rf deploy/node_modules/@eslint*
+      - rm -rf deploy/node_modules/@nuxt/devtools
+      - rm -rf deploy/node_modules/@vite-pwa
+      - rm -rf deploy/node_modules/vitest
+      - rm -rf deploy/node_modules/vue-tsc
+      - rm -rf deploy/node_modules/sass
+      - rm -rf deploy/node_modules/vite-plugin-vuetify
       - find deploy/node_modules -name "*.d.ts" -delete
       - find deploy/node_modules -name "*.map" -delete
+      - find deploy/node_modules -name "*.ts" -delete
+      - find deploy/node_modules -name "*.md" -delete
+      - find deploy/node_modules -name "*.txt" -delete
+      - find deploy/node_modules -name "LICENSE" -delete
+      - find deploy/node_modules -name "CHANGELOG*" -delete
+      - find deploy/node_modules -name "README*" -delete
+      - find deploy/node_modules -name "test" -type d -exec rm -rf {} +
+      - find deploy/node_modules -name "tests" -type d -exec rm -rf {} +
+      - find deploy/node_modules -name "example" -type d -exec rm -rf {} +
+      - find deploy/node_modules -name "examples" -type d -exec rm -rf {} +
+      - find deploy/node_modules -name "docs" -type d -exec rm -rf {} +
+      - find deploy/node_modules -name "coverage" -type d -exec rm -rf {} +
+      - echo "Package size optimization completed"
       
       # Create ZIP package for Lambda
-      - cd deploy && zip -r ../lambda-deployment.zip . -x "*.git*" "*.DS_Store*"
+      - cd deploy && zip -qr ../lambda-deployment.zip . -x "*.git*" "*.DS_Store*"
       - cd ..
+      
+      # Display package size information
+      - echo "Package size information:"
+      - du -sh deploy/
+      - du -sh lambda-deployment.zip
+      - echo "Total files in package: $(find deploy -type f | wc -l)"
       
       # Upload to Lambda
       - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
