@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
     // Upload to S3
     const uploadCommand = new PutObjectCommand({
-      Bucket: config.public.s3BucketName,
+      Bucket: config.s3UploadsBucket,
       Key: fileName,
       Body: file.data,
       ContentType: file.type
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
     await s3Client.send(uploadCommand)
 
     // Update user profile with image URL
-    const imageUrl = `https://${config.public.s3BucketName}.s3.${config.awsRegion}.amazonaws.com/${fileName}`
+    const imageUrl = `https://${config.s3UploadsBucket}.s3.${config.awsRegion}.amazonaws.com/${fileName}`
     
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')

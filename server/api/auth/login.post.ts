@@ -24,14 +24,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const config = useRuntimeConfig()
-    logger.debug('設定 ClientId:', config.public.cognitoClientId)
+    logger.debug('設定 ClientId:', config.cognitoClientId as string)
     const client = createCognitoClient()
     logger.debug('Cognitoクライアントが作成されました')
 
     // Authenticate with Cognito
     const authCommand = new InitiateAuthCommand({
       AuthFlow: 'USER_PASSWORD_AUTH',
-      ClientId: config.public.cognitoClientId,
+      ClientId: config.cognitoClientId as string,
       AuthParameters: {
         USERNAME: email,
         PASSWORD: password

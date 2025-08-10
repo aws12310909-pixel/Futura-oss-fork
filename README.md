@@ -113,7 +113,6 @@ npm run dev
 AWS_REGION=ap-northeast-1
 COGNITO_USER_POOL_ID=<Terraform出力値>
 COGNITO_CLIENT_ID=<Terraform出力値>
-COGNITO_USER_POOL_DOMAIN=<Terraform出力値>
 S3_BUCKET_NAME=<Terraform出力値>
 ```
 

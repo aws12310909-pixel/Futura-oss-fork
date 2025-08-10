@@ -35,7 +35,7 @@ export const getCognitoGroups = async (username: string): Promise<string[]> => {
     const client = createCognitoClient()
     
     const command = new AdminListGroupsForUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: username
     })
     
@@ -56,13 +56,13 @@ export const listCognitoGroups = async (): Promise<CognitoGroup[]> => {
     const client = createCognitoClient()
     
     const command = new ListGroupsCommand({
-      UserPoolId: config.public.cognitoUserPoolId
+      UserPoolId: config.cognitoUserPoolId as string
     })
     
     const response = await client.send(command)
     return response.Groups?.map(group => ({
       GroupName: group.GroupName || '',
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Description: group.Description,
       RoleArn: group.RoleArn,
       Precedence: group.Precedence,
@@ -87,7 +87,7 @@ export const createCognitoGroup = async (groupData: GroupCreateForm): Promise<Co
     const client = createCognitoClient()
     
     const command = new CreateGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       GroupName: groupData.groupName,
       Description: groupData.description,
       Precedence: groupData.precedence
@@ -104,7 +104,7 @@ export const createCognitoGroup = async (groupData: GroupCreateForm): Promise<Co
     
     return {
       GroupName: response.Group.GroupName || '',
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Description: response.Group.Description,
       RoleArn: response.Group.RoleArn,
       Precedence: response.Group.Precedence,
@@ -135,7 +135,7 @@ export const getCognitoGroup = async (groupName: string): Promise<CognitoGroup |
     const client = createCognitoClient()
     
     const command = new GetGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       GroupName: groupName
     })
     
@@ -147,7 +147,7 @@ export const getCognitoGroup = async (groupName: string): Promise<CognitoGroup |
     
     return {
       GroupName: response.Group.GroupName || '',
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Description: response.Group.Description,
       RoleArn: response.Group.RoleArn,
       Precedence: response.Group.Precedence,
@@ -175,7 +175,7 @@ export const updateCognitoGroup = async (groupName: string, groupData: GroupUpda
     const client = createCognitoClient()
     
     const command = new UpdateGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       GroupName: groupName,
       Description: groupData.description,
       Precedence: groupData.precedence
@@ -192,7 +192,7 @@ export const updateCognitoGroup = async (groupName: string, groupData: GroupUpda
     
     return {
       GroupName: response.Group.GroupName || '',
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Description: response.Group.Description,
       RoleArn: response.Group.RoleArn,
       Precedence: response.Group.Precedence,
@@ -223,7 +223,7 @@ export const deleteCognitoGroup = async (groupName: string): Promise<void> => {
     const client = createCognitoClient()
     
     const command = new DeleteGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       GroupName: groupName
     })
     
@@ -255,7 +255,7 @@ export const addUserToGroup = async (username: string, groupName: string): Promi
     await verifyUserExists(username)
     
     const command = new AdminAddUserToGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: username,
       GroupName: groupName
     })
@@ -291,7 +291,7 @@ export const removeUserFromGroup = async (username: string, groupName: string): 
     const client = createCognitoClient()
     
     const command = new AdminRemoveUserFromGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: username,
       GroupName: groupName
     })
@@ -327,7 +327,7 @@ export const verifyUserExists = async (username: string): Promise<void> => {
     const client = createCognitoClient()
     
     const command = new AdminGetUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: username
     })
     
@@ -352,7 +352,7 @@ export const listUsersInGroup = async (groupName: string): Promise<User[]> => {
     const client = createCognitoClient()
     
     const command = new ListUsersInGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       GroupName: groupName
     })
     

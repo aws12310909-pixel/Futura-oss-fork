@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
 
     // Disable user in Cognito
     const disableUserCommand = new AdminDisableUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email
     })
 

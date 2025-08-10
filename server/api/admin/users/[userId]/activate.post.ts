@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
     // Enable user in Cognito
     const enableUserCommand = new AdminEnableUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email
     })
 

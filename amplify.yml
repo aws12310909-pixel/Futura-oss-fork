@@ -12,10 +12,23 @@ frontend:
         - npm ci
     build:
       commands:
-        - npm run build
+        # Load environment variables based on STAGE environment variable
+        - |
+          if [ "${STAGE}" = "prod" ]; then
+            echo "Building for production environment"
+            cp .env.prod .env
+            npm run build
+          elif [ "${STAGE}" = "stg" ]; then
+            echo "Building for staging environment"
+            cp .env.stg .env
+            npm run build
+          else
+            echo "Building for development environment"
+            cp .env.dev .env
+            npm run build
+          fi
   artifacts:
     # IMPORTANT - Please verify your build output directory
-    # baseDirectory: src/dist/
     baseDirectory: .output
     files:
       - '**/*'

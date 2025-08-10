@@ -95,20 +95,17 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Private keys (only available on the server-side)
     awsRegion: process.env.AWS_REGION || 'ap-northeast-1',
-    dynamodbUsersTable: process.env.NUXT_DYNAMODB_USERS_TABLE || 'btc-mock-app-dev-users',
-    dynamodbTransactionsTable: process.env.NUXT_DYNAMODB_TRANSACTIONS_TABLE || 'btc-mock-app-dev-transactions',
-    dynamodbMarketRatesTable: process.env.NUXT_DYNAMODB_MARKET_RATES_TABLE || 'btc-mock-app-dev-market-rates',
-    dynamodbSessionsTable: process.env.NUXT_DYNAMODB_SESSIONS_TABLE || 'btc-mock-app-dev-sessions',
-    dynamodbPermissionsTable: process.env.NUXT_DYNAMODB_PERMISSIONS_TABLE || 'btc-mock-app-dev-permissions',
-    s3UploadsBucket: process.env.NUXT_S3_UPLOADS_BUCKET || 'btc-mock-app-dev-uploads',
+    dynamodbUsersTable: process.env.NUXT_DYNAMODB_USERS_TABLE || 'futura-dev-users',
+    dynamodbTransactionsTable: process.env.NUXT_DYNAMODB_TRANSACTIONS_TABLE || 'futura-dev-transactions',
+    dynamodbMarketRatesTable: process.env.NUXT_DYNAMODB_MARKET_RATES_TABLE || 'futura-dev-market-rates',
+    dynamodbSessionsTable: process.env.NUXT_DYNAMODB_SESSIONS_TABLE || 'futura-dev-sessions',
+    dynamodbPermissionsTable: process.env.NUXT_DYNAMODB_PERMISSIONS_TABLE || 'futura-dev-permissions',
+    s3UploadsBucket: process.env.NUXT_S3_UPLOADS_BUCKET || 'futura-dev-uploads',
+    cognitoUserPoolId: process.env.NUXT_PUBLIC_COGNITO_USER_POOL_ID || '',
+    cognitoClientId: process.env.NUXT_PUBLIC_COGNITO_CLIENT_ID || '',
     
     // Public keys (exposed to the client-side)
     public: {
-      awsRegion: process.env.AWS_REGION || 'ap-northeast-1',
-      cognitoUserPoolId: process.env.NUXT_PUBLIC_COGNITO_USER_POOL_ID || '',
-      cognitoClientId: process.env.NUXT_PUBLIC_COGNITO_CLIENT_ID || '',
-      cognitoUserPoolDomain: process.env.COGNITO_USER_POOL_DOMAIN || '',
-      s3BucketName: process.env.NUXT_S3_UPLOADS_BUCKET || '',
       apiBaseUrl: process.env.API_BASE_URL || '/api'
     }
   },
@@ -119,11 +116,11 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: 'BTC Mock App',
+      title: 'Futura',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'BTC Mock Application for portfolio management' }
+        { name: 'description', content: 'Futura' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },

@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
     // Create user in Cognito
     const createUserCommand = new AdminCreateUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: email,
       TemporaryPassword: temporary_password,
       MessageAction: 'SUPPRESS', // Don't send email
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
     // Add user to default group
     const addToGroupCommand = new AdminAddUserToGroupCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: email,
       GroupName: 'user'
     })
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
 
     // Get user details including sub from Cognito
     const getUserCommand = new AdminGetUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: email
     })
 

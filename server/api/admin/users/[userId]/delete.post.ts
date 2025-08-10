@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
 
     // Delete user from Cognito (physical deletion)
     const deleteUserCommand = new AdminDeleteUserCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email
     })
 

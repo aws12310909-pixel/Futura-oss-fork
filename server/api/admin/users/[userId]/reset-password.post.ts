@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
 
     // Set temporary password in Cognito
     const setPasswordCommand = new AdminSetUserPasswordCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email,
       Password: body.temporary_password,
       Permanent: false // User must change on next login

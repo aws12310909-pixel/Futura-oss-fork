@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
     // Respond to NEW_PASSWORD_REQUIRED challenge
     const challengeCommand = new RespondToAuthChallengeCommand({
-      ClientId: config.public.cognitoClientId,
+      ClientId: config.cognitoClientId as string,
       ChallengeName: 'NEW_PASSWORD_REQUIRED',
       Session: session,
       ChallengeResponses: {

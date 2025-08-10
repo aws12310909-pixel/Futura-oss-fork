@@ -72,7 +72,7 @@ async function syncUsersFromCognito(): Promise<{ synced: number; errors: number 
     
     // Cognitoからユーザー一覧を取得
     const command = new ListUsersCommand({
-      UserPoolId: config.public.cognitoUserPoolId,
+      UserPoolId: config.cognitoUserPoolId as string,
       Limit: 60
     })
     
