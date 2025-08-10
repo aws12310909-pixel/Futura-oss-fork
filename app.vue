@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <!-- Show main app only after auth initialization -->
-    <div v-if="isInitialized">
+    <div v-show="isInitialized">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
@@ -11,7 +11,7 @@
     </div>
     
     <!-- Global loading screen during auth initialization -->
-    <div v-else class="loading-container">
+    <div v-show="!isInitialized" class="loading-container">
       <div class="loading-card">
         <div class="loading-icon-wrapper">
           <div class="loading-icon"/>
