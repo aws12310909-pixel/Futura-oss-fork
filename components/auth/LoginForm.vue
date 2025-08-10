@@ -42,22 +42,6 @@
       </div>
     </v-form>
 
-    <!-- Demo credentials -->
-    <v-card class="mt-6 bg-blue-50 border border-blue-200" variant="outlined">
-      <v-card-text class="text-sm">
-        <div class="flex items-center mb-2">
-          <Icon name="mdi:information" class="text-blue-500 mr-2" />
-          <span class="font-medium text-blue-700">デモ用ログイン情報</span>
-        </div>
-        <div class="space-y-1 text-blue-600">
-          <p><strong>管理者:</strong> admin@example.com / TempAdmin123!</p>
-          <p class="text-xs">※初回ログイン時にパスワード変更が必要です</p>
-          <p><strong>一般ユーザー:</strong> user@example.com / TempUser123!</p>
-          <p class="text-xs">※初回ログイン時にパスワード変更が必要です</p>
-        </div>
-      </v-card-text>
-    </v-card>
-
     <!-- Password Change Dialog -->
     <AuthChangeInitialPasswordDialog
       v-model="showPasswordChangeDialog"

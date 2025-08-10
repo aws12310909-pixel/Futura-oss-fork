@@ -94,14 +94,6 @@
           >
             更新
           </v-btn>
-          <v-btn
-            variant="outlined" 
-            color="warning"
-            prepend-icon="mdi-bug"
-            @click="runDebugTest"
-          >
-            デバッグテスト
-          </v-btn>
         </div>
       </v-card-text>
     </v-card>
@@ -438,25 +430,6 @@ const getStatusText = (status?: string) => {
       return '拒否済み'
     default:
       return '不明'
-  }
-}
-
-// Debug test function
-const runDebugTest = async () => {
-  try {
-    logger.debug('デバッグテスト開始')
-    const response = await apiClient.get('/debug/transactions-test')
-    logger.debug('デバッグレスポンス:', response)
-    
-    if (response.success && response.data) {
-      const debug = response.data.debug
-      showError(`デバッグ結果: ユーザートランザクション数=${debug?.userTransactionsCount || 0}, 全トランザクション数=${debug?.allTransactionsCount || 0}, 権限=${debug?.hasTransactionReadPermission}`)
-    } else {
-      showError(`デバッグエラー: ${response.error?.message || 'データ取得失敗'}`)
-    }
-  } catch (error: any) {
-    logger.error('デバッグテストエラー:', error)
-    showError(`デバッグエラー: ${error?.data?.message || error.message || 'Unknown error'}`)
   }
 }
 
