@@ -68,8 +68,10 @@ export const useApiClient = (options: ApiClientOptions = {}) => {
 
     // リクエストボディの準備
     let requestBody: string | undefined
-    if (body && method !== 'GET') {
-      requestBody = JSON.stringify(body)
+    if (method !== 'GET') {
+      // bodyがundefinedの場合は空のオブジェクトとして処理
+      const bodyData = body !== undefined ? body : {}
+      requestBody = JSON.stringify(bodyData)
       
       // GET以外のリクエストでx-amz-content-sha256ヘッダを自動付与
       try {
