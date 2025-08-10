@@ -1,5 +1,6 @@
 import { getDynamoDBService } from '~/server/utils/dynamodb'
 import { calculateBalance } from '~/server/utils/transaction-helpers'
+import { generateTransactionId } from '~/server/utils/uuid'
 import { useLogger } from '~/composables/useLogger'
 import type { Transaction, TransactionCreateForm, User as _User } from '~/types'
 
@@ -66,7 +67,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create transaction record
-    const transactionId = crypto.randomUUID()
+    const transactionId = generateTransactionId()
     const now = new Date().toISOString()
 
     const transaction: Transaction = {

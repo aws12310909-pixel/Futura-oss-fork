@@ -74,7 +74,8 @@ export default defineNuxtConfig({
       'process.env.DEBUG': false,
     },
     ssr: {
-      noExternal: ['vuetify']
+      noExternal: ['vuetify'],
+      external: ['node:crypto']
     },
     optimizeDeps: {
       include: ['uuid']

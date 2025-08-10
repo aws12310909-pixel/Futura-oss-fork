@@ -2,7 +2,7 @@ import { getDynamoDBService } from '~/server/utils/dynamodb'
 import { useLogger } from '~/composables/useLogger'
 import type { TransactionRequestForm, EnhancedTransaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
-import { randomUUID } from 'crypto'
+import { generateTransactionId } from '~/server/utils/uuid'
 
 export default defineEventHandler(async (event) => {
   const logger = useLogger({ prefix: '[TransactionRequest]' })
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
     }
     
     // 3. 取引リクエストを作成
-    const transactionId = randomUUID()
+    const transactionId = generateTransactionId()
     const now = new Date().toISOString()
     
     const transactionRequest: EnhancedTransaction = {

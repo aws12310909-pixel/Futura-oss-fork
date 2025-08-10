@@ -1,12 +1,12 @@
 // 1. 外部ライブラリ
 import { GetUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 
-// 2. Node.js標準ライブラリ
-import { randomUUID } from 'crypto'
+// 2. 内部server utils
+import { generateSessionId } from './uuid'
 
 // 3. Nuxt/H3関連
 import type { H3Event } from 'h3'
-import { getHeader, getCookie } from 'h3'
+import { getHeader, getCookie, deleteCookie } from 'h3'
 
 // 4. 内部server utils  
 import { getDynamoDBService } from './dynamodb'
@@ -23,13 +23,6 @@ import type { Session, SessionCreateRequest, AuthUser } from '~/types'
 // Server-side logger (useLogger composable使用)
 const logger = useLogger({ prefix: '[SERVER-SESSION]' })
 
-/**
- * セッションIDを生成（Node.js環境用）
- */
-function generateSessionId(): string {
-  // Node.jsの標準randomUUID()を使用
-  return randomUUID()
-}
 
 /**
  * クライアントIPアドレスを取得
