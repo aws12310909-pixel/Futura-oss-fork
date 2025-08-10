@@ -58,8 +58,8 @@ phases:
       # Create deployment directory
       - mkdir -p deploy
       
-      # Copy build output to deploy directory
-      - cp -r .output deploy/
+      # Copy server files directly to deploy directory (not the .output directory)
+      - cp -r .output/server/* deploy/
       
       # Display package size information (before moving to deploy directory)
       - echo "Package size information:"
@@ -78,6 +78,10 @@ phases:
       # Upload to Lambda
       - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
       - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda-deployment.zip
+      
+      # Update Lambda function configuration
+      - echo Updating Lambda function configuration
+      - aws lambda update-function-configuration --function-name $LAMBDA_FUNCTION_NAME --runtime nodejs20.x --handler index.handler
       
       # Wait for Lambda update to complete
       - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME
