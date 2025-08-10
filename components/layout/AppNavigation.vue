@@ -1,8 +1,9 @@
 <template>
   <v-navigation-drawer
-    v-model="drawer"
-    :rail="rail && !mobile"
-    permanent
+    v-model="drawerModel"
+    :rail="rail && !isMobile"
+    :permanent="!isMobile"
+    :temporary="isMobile"
     class="bg-white border-r border-gray-200"
     width="256"
     rail-width="64"
@@ -11,7 +12,7 @@
     <div class="p-4 border-b border-gray-200">
       <div class="flex items-center space-x-3">
         <Icon name="mdi:bitcoin" class="text-2xl text-primary-500 flex-shrink-0" />
-        <div v-show="!rail || mobile" class="min-w-0">
+        <div v-show="!rail || isMobile" class="min-w-0">
           <h2 class="text-sm font-semibold text-gray-900 truncate">BTC Mock App</h2>
           <p class="text-xs text-gray-500 truncate">{{ user?.name }}</p>
         </div>
@@ -69,7 +70,7 @@
       <div class="pa-2 border-t border-gray-200">
         <!-- Toggle Rail Button -->
         <v-btn
-          v-if="!mobile"
+          v-if="!isMobile"
           variant="text"
           size="small"
           icon
@@ -93,7 +94,7 @@
                   <span class="text-xs font-medium">{{ userInitials }}</span>
                 </v-avatar>
               </template>
-              <span v-show="!rail || mobile" class="text-sm truncate ml-3">
+              <span v-show="!rail || isMobile" class="text-sm truncate ml-3">
                 {{ user?.name }}
               </span>
             </v-btn>
@@ -118,34 +119,32 @@
 </template>
 
 <script setup>
+// Props
+const props = defineProps({
+  isMobile: {
+    type: Boolean,
+    default: false
+  },
+  drawer: {
+    type: Boolean,
+    default: true
+  }
+})
+
+// Emits
+const emit = defineEmits(['update:drawer'])
+
 const logger = useLogger({ prefix: '[AppNavigation]' })
 const { user, logout, isAdmin } = useAuth()
 const { showSuccess, showError } = useNotification()
 
-// Mobile detection without Vuetify dependency
-const mobile = ref(false)
-
-// Initialize mobile detection on client
-onMounted(() => {
-  if (import.meta.client) {
-    const updateMobile = () => {
-      mobile.value = window.innerWidth < 768
-    }
-    
-    // Set initial value
-    updateMobile()
-    
-    // Listen for resize events
-    window.addEventListener('resize', updateMobile)
-    
-    onUnmounted(() => {
-      window.removeEventListener('resize', updateMobile)
-    })
-  }
-})
-
-const drawer = ref(true)
 const rail = ref(false)
+
+// Computed for v-model
+const drawerModel = computed({
+  get: () => props.drawer,
+  set: (value) => emit('update:drawer', value)
+})
 
 const userNavItems = [
   {
@@ -240,7 +239,7 @@ const handleLogout = async () => {
 }
 
 // Handle mobile responsiveness
-watch(mobile, (isMobile) => {
+watch(() => props.isMobile, (isMobile) => {
   if (isMobile) {
     rail.value = false
   }
