@@ -1,9 +1,9 @@
 <template>
   <v-dialog 
     :model-value="modelValue" 
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="800"
     persistent
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title class="px-6 py-4 border-b">
@@ -50,8 +50,8 @@
                 variant="outlined"
                 size="small"
                 prepend-icon="mdi-refresh"
-                @click="loadGroupMembers"
                 :loading="loading"
+                @click="loadGroupMembers"
               >
                 更新
               </v-btn>
@@ -102,8 +102,8 @@
                       variant="text"
                       color="error"
                       icon="mdi-account-minus"
-                      @click="removeUserFromGroup(member)"
                       :loading="removingUserId === member.user_id"
+                      @click="removeUserFromGroup(member)"
                     />
                     <v-tooltip v-else>
                       <template #activator="{ props: tooltipProps }">
@@ -138,6 +138,8 @@
 
 <script setup lang="ts">
 import type { CognitoGroup, User } from '~/types'
+
+const apiClient = useApiClient()
 
 interface GroupMember extends User {
   // User interface already contains all needed fields
@@ -181,8 +183,8 @@ const availableUserOptions = computed(() => {
 // Methods
 const loadAllUsers = async () => {
   try {
-    const { data } = await $fetch<{ success: boolean; data: { items: User[] } }>('/api/admin/users')
-    allUsers.value = data.items
+    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    allUsers.value = response.data!.items
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
     showError('ユーザー一覧の取得に失敗しました')
@@ -194,7 +196,8 @@ const loadGroupMembers = async () => {
 
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: { users: GroupMember[] } }>(`/api/admin/groups/${props.group.GroupName}/users`)
+    const response = await apiClient.get<{ users: GroupMember[] }>(`/admin/groups/${props.group.GroupName}/users`)
+    const data = response.data!
     groupMembers.value = data.users
   } catch (error) {
     logger.error('グループメンバーの読み込みに失敗しました:', error)
@@ -209,10 +212,7 @@ const addUserToGroup = async () => {
 
   addingUser.value = true
   try {
-    await $fetch(`/api/admin/users/${selectedUserId.value}/groups`, {
-      method: 'POST',
-      body: { groupName: props.group.GroupName }
-    })
+    await apiClient.post(`/admin/users/${selectedUserId.value}/groups`, { groupName: props.group.GroupName })
 
     const user = allUsers.value.find(u => u.user_id === selectedUserId.value)
     showSuccess(`「${user?.name}」をグループ「${props.group.GroupName}」に追加しました`)
@@ -249,9 +249,7 @@ const removeUserFromGroup = async (member: GroupMember) => {
 
   removingUserId.value = member.user_id
   try {
-    await $fetch(`/api/admin/users/${member.user_id}/groups/${props.group.GroupName}`, {
-      method: 'DELETE'
-    })
+    await apiClient.delete(`/admin/users/${member.user_id}/groups/${props.group.GroupName}`)
 
     showSuccess(`「${member.name}」をグループ「${props.group.GroupName}」から削除しました`)
     await loadGroupMembers()

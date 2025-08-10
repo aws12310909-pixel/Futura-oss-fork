@@ -93,6 +93,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const logger = useLogger({ prefix: '[CurrencyInput]' })
+const apiClient = useApiClient()
 
 // State
 const selectedCurrency = ref<'BTC' | 'JPY'>('BTC')
@@ -122,8 +123,8 @@ const jpyAmountRules = [
 const loadLatestRate = async () => {
   try {
     rateError.value = false
-    const response = await $fetch<{ success: boolean; data: MarketRate }>('/api/market-rates/latest')
-    if (response.success && response.data) {
+    const response = await apiClient.get<MarketRate>('/market-rates/latest')
+    if (response.data) {
       latestRate.value = response.data
     } else {
       throw new Error('No market rate data available')

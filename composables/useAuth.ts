@@ -10,6 +10,7 @@ const globalIsInitialized = ref(false)
 
 export const useAuth = () => {
   const logger = useLogger({ prefix: '[AUTH]' })
+  const apiClient = useApiClient()
   
   // Use global state to ensure singleton behavior
   const user = globalUser
@@ -76,30 +77,26 @@ export const useAuth = () => {
       }
 
       // Normal login flow
-      const response = await $fetch<{ 
-        success: boolean; 
+      const response = await apiClient.post<{ 
         data?: AuthUser; 
         challenge?: string; 
         session?: string; 
         message?: string 
-      }>('/api/auth/login', {
-        method: 'POST',
-        body: credentials
-      })
+      }>('/auth/login', credentials)
 
-      if (response.success && response.data) {
-        user.value = response.data
-        saveToCache(response.data)
+      if (response.data?.data) {
+        user.value = response.data.data
+        saveToCache(response.data.data)
         // Ensure auth state is properly synchronized before navigation
         await nextTick()
         await navigateTo('/dashboard')
-        return { success: true, data: response.data }
-      } else if (response.challenge) {
+        return { success: true, data: response.data.data }
+      } else if (response.data?.challenge) {
         return {
           success: false,
-          challenge: response.challenge,
-          session: response.session,
-          message: response.message
+          challenge: response.data.challenge,
+          session: response.data.session,
+          message: response.data.message
         }
       }
       
@@ -117,12 +114,9 @@ export const useAuth = () => {
   const processAuthenticationResult = async (authResult: any, email: string): Promise<AuthUser | null> => {
     try {
       // Create session and return user data
-      const response = await $fetch<{ success: boolean; data: AuthUser }>('/api/auth/process-auth-result', {
-        method: 'POST',
-        body: {
-          authResult,
-          email
-        }
+      const response = await apiClient.post<AuthUser>('/auth/process-auth-result', {
+        authResult,
+        email
       })
       
       const userData = response.data || null
@@ -141,7 +135,7 @@ export const useAuth = () => {
     isLoading.value = true
     try {
       const currentUserEmail = user.value?.email || 'unknown'
-      await $fetch('/api/auth/logout', { method: 'POST' })
+      await apiClient.post('/auth/logout')
       logger.auth.logout(currentUserEmail)
       user.value = null
       clearCache()
@@ -210,10 +204,10 @@ export const useAuth = () => {
 
       // Fetch from API
       logger.debug('APIから現在のユーザーを取得中...')
-      const response = await $fetch<{ success: boolean; data: AuthUser }>('/api/auth/me')
+      const response = await apiClient.get<AuthUser>('/auth/me')
       logger.debug('認証チェックレスポンス:', response)
       
-      if (response?.success && response?.data) {
+      if (response?.data) {
         user.value = response.data
         saveToCache(response.data)
         logger.info('APIからユーザー認証しました:', response.data.email)
@@ -245,10 +239,7 @@ export const useAuth = () => {
   const changePassword = async (passwordData: ChangePasswordRequest): Promise<boolean> => {
     isLoading.value = true
     try {
-      await $fetch('/api/auth/change-password', {
-        method: 'POST',
-        body: passwordData
-      })
+      await apiClient.post('/auth/change-password', passwordData)
       return true
     } catch (error) {
       logger.error('パスワード変更エラー:', error)

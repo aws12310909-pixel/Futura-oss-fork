@@ -1,8 +1,8 @@
 <template>
   <v-dialog 
     :model-value="modelValue" 
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="700"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title class="px-6 py-4 border-b">

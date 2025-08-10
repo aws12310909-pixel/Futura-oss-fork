@@ -131,8 +131,8 @@ export default defineNuxtConfig({
   },
 
   // Nitro configuration for Lambda deployment
-  // nitro: {
-  //   preset: 'aws-lambda',
-  //   serveStatic: true
-  // }
+  nitro: {
+    preset: 'aws-lambda',
+    serveStatic: true
+  }
 })

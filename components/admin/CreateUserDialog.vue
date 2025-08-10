@@ -104,6 +104,7 @@
 import type { UserCreateForm } from '~/types'
 
 const logger = useLogger({ prefix: '[COMPONENT-CREATE-USER-DIALOG]' })
+const apiClient = useApiClient()
 
 // Props & Emits
 const props = defineProps<{
@@ -166,10 +167,7 @@ const createUser = async () => {
   loading.value = true
   
   try {
-    await $fetch('/api/admin/users', {
-      method: 'POST',
-      body: form
-    })
+    await apiClient.post('/admin/users', form)
 
     showSuccess('ユーザーを作成しました')
     resetForm()

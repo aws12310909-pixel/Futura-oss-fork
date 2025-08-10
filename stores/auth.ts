@@ -43,9 +43,10 @@ export const useAuthStore = defineStore('auth', {
 
       this.setLoading(true)
       try {
-        const { data } = await $fetch<{ success: boolean; data: AuthUser }>('/api/auth/me')
-        if (data) {
-          this.setUser(data)
+        const apiClient = useApiClient()
+        const response = await apiClient.get<AuthUser>('/auth/me')
+        if (response.data) {
+          this.setUser(response.data)
         }
       } catch (error) {
         logger.error('認証の初期化に失敗しました:', error)

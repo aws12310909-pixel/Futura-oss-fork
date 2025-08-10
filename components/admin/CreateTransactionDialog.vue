@@ -180,6 +180,8 @@
 <script setup lang="ts">
 import type { TransactionCreateForm, User, MarketRate } from '~/types'
 
+const apiClient = useApiClient()
+
 // Props & Emits
 const props = defineProps<{
   modelValue: boolean
@@ -286,10 +288,7 @@ const createTransaction = async () => {
   loading.value = true
   
   try {
-    await $fetch('/api/admin/transactions', {
-      method: 'POST',
-      body: form
-    })
+    await apiClient.post('/admin/transactions', form)
 
     showSuccess('取引を追加しました')
     resetForm()
@@ -318,7 +317,8 @@ const cancel = () => {
 const loadLatestRate = async () => {
   try {
     rateError.value = false
-    const response = await $fetch<{ success: boolean; data: MarketRate }>('/api/market-rates/latest')
+    const apiClient = useApiClient()
+    const response = await apiClient.get<{ success: boolean; data: MarketRate }>('/market-rates/latest')
     if (response.success && response.data) {
       latestRate.value = response.data
     } else {
@@ -372,7 +372,8 @@ const onUserChange = async (userId: string) => {
   }
 
   try {
-    const { data } = await $fetch<{ success: boolean; data: { btc_balance: number } }>(`/api/admin/users/${userId}/balance`)
+    const apiClient = useApiClient()
+    const { data } = await apiClient.get<{ success: boolean; data: { btc_balance: number } }>(`/admin/users/${userId}/balance`)
     selectedUserBalance.value = data.btc_balance
   } catch (error) {
     logger.error('ユーザー残高の取得に失敗しました:', error)

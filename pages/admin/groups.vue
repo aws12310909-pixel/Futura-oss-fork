@@ -220,6 +220,7 @@ useHead({
 
 const logger = useLogger({ prefix: '[AdminGroups]' })
 const { showSuccess, showError } = useNotification()
+const apiClient = useApiClient()
 
 // State
 const groups = ref<CognitoGroup[]>([])
@@ -264,7 +265,8 @@ const customGroupsCount = computed(() =>
 const loadGroups = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: CognitoGroup[] }>('/api/admin/groups')
+    const response = await apiClient.get<CognitoGroup[]>('/admin/groups')
+    const data = response.data
     groups.value = data || [] // APIから直接配列が返される。万が一undefinedの場合は空配列
   } catch (error) {
     logger.error('グループ一覧の読み込みに失敗しました:', error)
@@ -296,7 +298,7 @@ const deleteGroup = async (group: CognitoGroup) => {
   }
 
   try {
-    await $fetch(`/api/admin/groups/${group.GroupName}`, { method: 'DELETE' })
+    await apiClient.delete(`/admin/groups/${group.GroupName}`)
     showSuccess(`グループ「${group.GroupName}」を削除しました`)
     await loadGroups()
   } catch (error) {

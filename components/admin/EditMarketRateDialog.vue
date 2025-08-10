@@ -102,6 +102,8 @@
 <script setup lang="ts">
 import type { MarketRate, MarketRateUpdateForm } from '~/types'
 
+const apiClient = useApiClient()
+
 // Props & Emits
 const props = defineProps<{
   modelValue: boolean
@@ -195,10 +197,7 @@ const updateRate = async () => {
   loading.value = true
   
   try {
-    await $fetch(`/api/admin/market-rates/${props.marketRate.rate_id}`, {
-      method: 'PUT',
-      body: form
-    })
+    await apiClient.put(`/admin/market-rates/${props.marketRate.rate_id}`, form)
 
     showSuccess('相場価格を更新しました')
     resetForm()

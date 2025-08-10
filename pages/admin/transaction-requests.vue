@@ -60,7 +60,7 @@
             class="w-48"
             @update:model-value="loadRequests"
           />
-          <div class="flex-1"></div>
+          <div class="flex-1"/>
           <span class="text-sm text-gray-500">
             {{ totalCount }}件中 {{ requests.length }}件を表示
           </span>
@@ -208,6 +208,7 @@ import type { PaginatedResponse } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
 
 const logger = useLogger({ prefix: '[ADMIN-TRANSACTION-REQUESTS]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth',
@@ -278,19 +279,17 @@ const todayRejectedCount = computed(() => {
 const loadRequests = async () => {
   loading.value = true
   try {
-    const response = await $fetch<{ success: boolean; data: PaginatedResponse<EnhancedTransactionRequest> }>('/api/admin/transaction-requests', {
-      query: {
+    const response = await apiClient.get<PaginatedResponse<EnhancedTransactionRequest>>('/admin/transaction-requests', {
+      params: {
         status: selectedStatus.value,
         page: page.value,
         limit: limit.value
       }
     })
 
-    if (response.success) {
-      requests.value = response.data.items
-      totalCount.value = response.data.total
-      hasMore.value = response.data.hasMore
-    }
+    requests.value = response.data!.items
+    totalCount.value = response.data!.total
+    hasMore.value = response.data!.hasMore
   } catch (error: any) {
     logger.error('リクエスト取得エラー:', error)
     useNotification().showError(error?.data?.message || 'リクエストの取得に失敗しました')
@@ -306,11 +305,8 @@ const changePage = (newPage: number) => {
 
 const approveRequest = async (request: EnhancedTransactionRequest) => {
   try {
-    const response = await $fetch(`/api/admin/transactions/${request.transaction_id}/status`, {
-      method: 'PATCH',
-      body: {
-        status: TRANSACTION_STATUS.APPROVED
-      }
+    const response = await apiClient.patch(`/admin/transactions/${request.transaction_id}/status`, {
+      status: TRANSACTION_STATUS.APPROVED
     })
 
             useNotification().showSuccess(`${request.user_name}さんの${request.transaction_type === 'deposit' ? '入金' : '出金'}リクエストを承認しました`)
@@ -353,10 +349,8 @@ const formatDateTime = (dateString: string) => {
 // Load current rate
 const loadCurrentRate = async () => {
   try {
-    const response = await $fetch<{ success: boolean; data: any }>('/api/market-rates/latest')
-    if (response.success) {
-      currentRate.value = response.data.btc_jpy_rate
-    }
+    const response = await apiClient.get<any>('/market-rates/latest')
+    currentRate.value = response.data!.btc_jpy_rate
   } catch (error) {
     logger.error('レート取得エラー:', error)
   }

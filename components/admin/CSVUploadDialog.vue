@@ -42,9 +42,9 @@
                 <v-btn
                   variant="outlined"
                   color="primary"
-                  @click="downloadTemplate"
                   :loading="downloading"
                   prepend-icon="mdi-download"
+                  @click="downloadTemplate"
                 >
                   テンプレートCSVダウンロード
                 </v-btn>
@@ -131,7 +131,7 @@
                     <v-tab value="valid">
                       有効データ ({{ validData.length }}件)
                     </v-tab>
-                    <v-tab value="duplicates" v-if="duplicates.length > 0">
+                    <v-tab v-if="duplicates.length > 0" value="duplicates">
                       重複データ ({{ duplicates.length }}件)
                     </v-tab>
                   </v-tabs>
@@ -257,8 +257,8 @@
         <v-spacer />
         <v-btn
           variant="text"
-          @click="closeDialog"
           :disabled="uploading"
+          @click="closeDialog"
         >
           {{ uploadResult ? '閉じる' : 'キャンセル' }}
         </v-btn>
@@ -310,6 +310,8 @@
 
 <script setup lang="ts">
 import type { MarketRateCreateForm, CSVUploadResponse } from '~/types'
+
+const apiClient = useApiClient()
 
 interface Props {
   modelValue: boolean
@@ -551,9 +553,7 @@ async function parseCSVFile(file: File) {
 async function checkDuplicates() {
   try {
     // Get existing rates to check for duplicates
-    const response = await $fetch('/api/market-rates', {
-      method: 'GET'
-    })
+    const response = await apiClient.get('/market-rates')
 
     if (response.success && response.data && response.data.items) {
       const existingTimestamps = new Set(
@@ -595,11 +595,8 @@ async function executeUpload() {
   uploadProgress.value = '相場レートをアップロード中...'
 
   try {
-    const response = await $fetch('/api/admin/market-rates', {
-      method: 'POST',
-      body: {
-        rates: validData.value
-      }
+    const response = await apiClient.post('/admin/market-rates', {
+      rates: validData.value
     })
 
     uploadResult.value = response

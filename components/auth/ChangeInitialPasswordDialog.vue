@@ -119,6 +119,7 @@
 import type { ChangeInitialPasswordRequest } from '~/types'
 
 const logger = useLogger({ prefix: '[COMPONENT-CHANGE-INITIAL-PASSWORD]' })
+const apiClient = useApiClient()
 
 // Props
 interface Props {
@@ -185,10 +186,7 @@ const handleSubmit = async () => {
       session: props.session
     }
 
-    const response = await $fetch('/api/auth/change-initial-password', {
-      method: 'POST',
-      body: requestData
-    })
+    const response = await apiClient.post('/auth/change-initial-password', requestData)
 
     if (response.success) {
       emit('success', response.data.authenticationResult)

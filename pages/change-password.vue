@@ -138,6 +138,7 @@
 import type { ChangePasswordRequest } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-CHANGE-PASSWORD]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth'
@@ -238,10 +239,7 @@ const changePassword = async () => {
       newPassword: form.newPassword
     }
 
-    await $fetch('/api/auth/change-password', {
-      method: 'POST',
-      body: requestData
-    })
+    await apiClient.post('/auth/change-password', requestData)
 
     showSuccess('パスワードを変更しました')
     

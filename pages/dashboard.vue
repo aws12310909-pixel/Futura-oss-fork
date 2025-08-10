@@ -298,6 +298,7 @@ useHead({
 })
 
 const { showError } = useNotification()
+const apiClient = useApiClient()
 
 // State
 const dashboardData = ref<DashboardData | null>(null)
@@ -430,12 +431,12 @@ const loadDashboardData = async () => {
   loading.value = true
   try {
     const [dashboardResponse, ratesResponse] = await Promise.all([
-      $fetch<{ success: boolean; data: DashboardData }>('/api/dashboard'),
-      $fetch<{ success: boolean; data: { items: MarketRate[] } }>('/api/market-rates?limit=30')
+      apiClient.get<DashboardData>('/dashboard'),
+      apiClient.get<{ items: MarketRate[] }>('/market-rates', { params: { limit: 30 } })
     ])
     
-    dashboardData.value = dashboardResponse.data
-    marketRates.value = ratesResponse.data.items || []
+    dashboardData.value = dashboardResponse.data!
+    marketRates.value = ratesResponse.data!.items || []
   } catch (error) {
     logger.error('ダッシュボードデータの読み込みに失敗しました:', error)
     showError('ダッシュボードデータの取得に失敗しました')

@@ -186,6 +186,7 @@ useHead({
 
 const logger = useLogger({ prefix: '[AdminApprovals]' })
 const { showSuccess, showError } = useNotification()
+const apiClient = useApiClient()
 
 // State
 const users = ref<User[]>([])
@@ -254,7 +255,8 @@ const totalUsers = computed(() =>
 const loadUsers = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: { items: User[] } }>('/api/admin/users')
+    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    const data = response.data!
     users.value = data.items
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
@@ -270,7 +272,7 @@ const approveUser = async (user: User) => {
   }
 
   try {
-    await $fetch(`/api/admin/users/${user.user_id}/approve`, { method: 'POST' })
+    await apiClient.post(`/admin/users/${user.user_id}/approve`)
     showSuccess(`${user.name}のプロフィールを承認しました`)
     await loadUsers()
   } catch (error) {
@@ -285,10 +287,7 @@ const rejectUser = async (user: User) => {
   if (reason === null) return // User cancelled
 
   try {
-    await $fetch(`/api/admin/users/${user.user_id}/reject`, { 
-      method: 'POST',
-      body: { reason: reason || undefined }
-    })
+    await apiClient.post(`/admin/users/${user.user_id}/reject`, { reason: reason || undefined })
     showSuccess(`${user.name}のプロフィール承認を取り消しました`)
     await loadUsers()
   } catch (error) {

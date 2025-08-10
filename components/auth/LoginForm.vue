@@ -23,7 +23,7 @@
           required
           autocomplete="current-password"
         >
-        <template v-slot:append-inner>
+        <template #append-inner>
           <Icon v-if="showPassword" name="mdi:eye" class="cursor-pointer" @click="showPassword = !showPassword" />
           <Icon v-else name="mdi:eye-off" class="cursor-pointer" @click="showPassword = !showPassword" />
         </template>

@@ -1,9 +1,9 @@
 <template>
   <v-dialog 
     :model-value="modelValue" 
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="600"
     persistent
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title class="px-6 py-4 border-b">
@@ -68,9 +68,9 @@
               <v-btn
                 variant="outlined"
                 prepend-icon="mdi-shield-check"
-                @click="showPermissionDialog = true"
                 :disabled="loading"
                 class="mb-2"
+                @click="showPermissionDialog = true"
               >
                 権限を選択 ({{ selectedPermissions.length }}個選択中)
               </v-btn>
@@ -222,9 +222,9 @@
                     v-for="permission in category.permissions"
                     :key="permission.key"
                     :model-value="selectedPermissions.includes(permission.key)"
-                    @update:model-value="togglePermission(permission.key)"
                     density="compact"
                     hide-details
+                    @update:model-value="togglePermission(permission.key)"
                   >
                     <template #label>
                       <div>
@@ -272,9 +272,9 @@
                     v-for="permission in category.permissions"
                     :key="permission.key"
                     :model-value="selectedPermissions.includes(permission.key)"
-                    @update:model-value="togglePermission(permission.key)"
                     density="compact"
                     hide-details
+                    @update:model-value="togglePermission(permission.key)"
                   >
                     <template #label>
                       <div>
@@ -314,6 +314,8 @@
 
 <script setup lang="ts">
 import type { CognitoGroup, GroupCreateForm, GroupUpdateForm } from '~/types'
+
+const apiClient = useApiClient()
 
 interface Props {
   modelValue: boolean
@@ -455,7 +457,7 @@ const clearAllPermissions = () => {
 // Load permissions data
 const loadPermissions = async () => {
   try {
-    const response = await $fetch('/api/admin/permissions')
+    const response = await apiClient.get('/admin/permissions')
     if (response.success) {
       permissionCategories.value = response.data.categories
       userCategories.value = response.data.userCategories
@@ -489,7 +491,7 @@ const loadGroupData = async () => {
     
     // Load existing permissions for this group
     try {
-      const response = await $fetch(`/api/admin/groups/${props.group.GroupName}/permissions`)
+      const response = await apiClient.get(`/admin/groups/${props.group.GroupName}/permissions`)
       if (response.success && response.data?.permissions) {
         selectedPermissions.value = response.data.permissions
       }
@@ -521,10 +523,7 @@ const submit = async () => {
         permissions: selectedPermissions.value
       }
       
-      await $fetch(`/api/admin/groups/${props.group!.GroupName}`, {
-        method: 'PUT',
-        body: updateData
-      })
+      await apiClient.put(`/admin/groups/${props.group!.GroupName}`, updateData)
       
       showSuccess(`グループ「${form.value.groupName}」を更新しました`)
       emit('updated')
@@ -535,10 +534,7 @@ const submit = async () => {
         permissions: selectedPermissions.value
       }
       
-      await $fetch('/api/admin/groups', {
-        method: 'POST',
-        body: createData
-      })
+      await apiClient.post('/admin/groups', createData)
       
       showSuccess(`グループ「${form.value.groupName}」を作成しました`)
       emit('created')

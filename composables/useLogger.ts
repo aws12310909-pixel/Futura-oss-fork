@@ -24,7 +24,7 @@ export const useLogger = (config: LoggerConfig = {}) => {
   const defaultConfig: LoggerConfig = {
     level: isDevelopment ? LOG_LEVELS.Debug : LOG_LEVELS.Info,
     enableInProduction: false,
-    prefix: process.server ? '[SERVER]' : '[CLIENT]'
+    prefix: import.meta.server ? '[SERVER]' : '[CLIENT]'
   }
   
   const finalConfig = { ...defaultConfig, ...config }

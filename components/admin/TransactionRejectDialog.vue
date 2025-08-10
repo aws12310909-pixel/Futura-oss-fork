@@ -88,6 +88,8 @@
 import { ref, watch } from 'vue'
 import { TRANSACTION_STATUS } from '~/types'
 
+const apiClient = useApiClient()
+
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'request-processed': []
@@ -126,12 +128,9 @@ const rejectRequest = async () => {
   loading.value = true
   
   try {
-    const response = await $fetch(`/api/admin/transactions/${props.request.transaction_id}/status`, {
-      method: 'PATCH',
-      body: {
-        status: TRANSACTION_STATUS.REJECTED,
-        rejection_reason: rejectionReason.value
-      }
+    const response = await apiClient.patch(`/admin/transactions/${props.request.transaction_id}/status`, {
+      status: TRANSACTION_STATUS.REJECTED,
+      rejection_reason: rejectionReason.value
     })
 
             useNotification().showSuccess(`${props.request.user_name}さんの${props.request.transaction_type === 'deposit' ? '入金' : '出金'}リクエストを拒否しました`)

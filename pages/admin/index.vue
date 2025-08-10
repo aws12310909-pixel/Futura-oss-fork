@@ -244,6 +244,7 @@ definePageMeta({
 const logger = useLogger({ prefix: '[AdminDashboard]' })
 const { showSuccess, showError } = useNotification()
 const { user } = useAuth()
+const apiClient = useApiClient()
 
 const loading = ref(false)
 const syncLoading = ref(false)
@@ -318,19 +319,14 @@ const loadDashboardData = async () => {
     logger.info('管理者ダッシュボードデータの読み込み開始')
     
     // 新しい統合されたダッシュボードAPIエンドポイントを呼び出し
-    const response = await $fetch<{
-      success: boolean
-      data: AdminDashboardData
-    }>('/api/admin/dashboard')
+    const response = await apiClient.get<AdminDashboardData>('/admin/dashboard')
     
-    if (response.success) {
-      dashboardData.value = response.data
-      logger.info('管理者ダッシュボードデータの読み込み完了:', {
-        stats: response.data.stats,
-        transactionRequests: response.data.recentTransactionRequests.length,
-        pendingUsers: response.data.pendingUsers.length
-      })
-    }
+    dashboardData.value = response.data!
+    logger.info('管理者ダッシュボードデータの読み込み完了:', {
+      stats: response.data!.stats,
+      transactionRequests: response.data!.recentTransactionRequests.length,
+      pendingUsers: response.data!.pendingUsers.length
+    })
 
   } catch (error) {
     logger.error('ダッシュボードデータの読み込みにエラーが発生しました:', error)
@@ -358,27 +354,20 @@ const syncCognitoData = async () => {
   try {
     logger.info('Cognito同期開始')
     
-    const response = await $fetch<{
-      success: boolean
-      data: {
-        syncResults: {
-          users: { synced: number; errors: number }
-          permissions: { synced: number; errors: number }
-        }
-        message: string
+    const response = await apiClient.post<{
+      syncResults: {
+        users: { synced: number; errors: number }
+        permissions: { synced: number; errors: number }
       }
-    }>('/api/admin/system/sync-cognito', {
-      method: 'POST'
-    })
+      message: string
+    }>('/admin/system/sync-cognito')
     
-    if (response.success) {
-      syncResults.value = response.data.syncResults
-      showSuccess(response.data.message)
-      logger.info('Cognito同期完了:', response.data.syncResults)
-      
-      // 同期後にダッシュボードデータを再読み込み
-      await loadDashboardData()
-    }
+    syncResults.value = response.data!.syncResults
+    showSuccess(response.data!.message)
+    logger.info('Cognito同期完了:', response.data!.syncResults)
+    
+    // 同期後にダッシュボードデータを再読み込み
+    await loadDashboardData()
   } catch (error) {
     logger.error('Cognito同期エラー:', error)
     showError('Cognito同期に失敗しました')

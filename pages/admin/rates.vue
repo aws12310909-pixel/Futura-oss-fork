@@ -178,6 +178,7 @@ useHead({
 
 const logger = useLogger({ prefix: '[AdminRates]' })
 const { showSuccess: _showSuccess, showError } = useNotification()
+const apiClient = useApiClient()
 
 // State
 const rates = ref<MarketRate[]>([])
@@ -236,14 +237,14 @@ const loadRates = async () => {
   loading.value = true
   try {
     const [ratesResponse, latestResponse] = await Promise.all([
-      $fetch<{ success: boolean; data: { items: MarketRate[] } }>('/api/market-rates'),
-      $fetch<{ success: boolean; data: MarketRate }>('/api/market-rates/latest')
+      apiClient.get<{ items: MarketRate[] }>('/market-rates'),
+      apiClient.get<MarketRate>('/market-rates/latest')
     ])
 
     console.log('ratesResponse', ratesResponse)
     console.log('latestResponse', latestResponse)
 
-    rates.value = ratesResponse.data.items
+    rates.value = ratesResponse.data!.items
     latestRate.value = latestResponse.data || null
   } catch (error) {
     logger.error('相場データの読み込みに失敗しました:', error)

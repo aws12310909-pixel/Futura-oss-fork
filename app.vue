@@ -14,7 +14,7 @@
     <div v-else class="loading-container">
       <div class="loading-card">
         <div class="loading-icon-wrapper">
-          <div class="loading-icon"></div>
+          <div class="loading-icon"/>
         </div>
         <div class="loading-text-wrapper">
           <p class="loading-text">認証状態を確認中...</p>

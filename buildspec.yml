@@ -1,0 +1,105 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo Installing dependencies
+      - npm ci --only=production
+      - npm install
+
+  pre_build:
+    commands:
+      - echo Pre-build phase started on `date`
+      
+      # Load environment variables based on ENV_FILE environment variable
+      - |
+        if [ -n "${ENV_FILE}" ]; then
+          echo "Building with environment file: ${ENV_FILE}"
+          if [ -f "${ENV_FILE}" ]; then
+            cp "${ENV_FILE}" .env
+            echo "Environment file ${ENV_FILE} loaded successfully"
+          else
+            echo "ERROR: Environment file ${ENV_FILE} not found"
+            exit 1
+          fi
+        else
+          echo "Building with default .env file"
+          if [ -f .env ]; then
+            echo "Default .env file found and loaded"
+          else
+            echo "WARNING: No .env file found, using CodeBuild environment variables directly"
+          fi
+        fi
+      
+      # Display environment variables for verification (without sensitive values)
+      - echo Checking environment variables
+      - echo ENV_FILE=$ENV_FILE
+      - echo LAMBDA_FUNCTION_NAME=$LAMBDA_FUNCTION_NAME
+      - echo CLOUDFRONT_DISTRIBUTION_ID=$CLOUDFRONT_DISTRIBUTION_ID
+      - echo AWS_REGION=$AWS_REGION
+      - echo NUXT_DYNAMODB_USERS_TABLE=$NUXT_DYNAMODB_USERS_TABLE
+      - echo NUXT_PUBLIC_COGNITO_USER_POOL_ID=${NUXT_PUBLIC_COGNITO_USER_POOL_ID:0:10}...
+      - echo NUXT_PUBLIC_COGNITO_CLIENT_ID=${NUXT_PUBLIC_COGNITO_CLIENT_ID:0:10}...
+      - echo Environment variables loaded successfully
+
+  build:
+    commands:
+      - echo Build phase started on `date`
+      - echo Building Nuxt application for Lambda
+      - npm run build
+      - echo Build completed successfully
+
+  post_build:
+    commands:
+      - echo Post-build phase started on `date`
+      - echo Creating deployment package
+      
+      # Create deployment directory
+      - mkdir -p deploy
+      
+      # Copy built application to deploy directory
+      - cp -r .output/* deploy/
+      
+      # Copy package.json for Lambda runtime dependencies
+      - cp package.json deploy/
+      
+      # Install production dependencies in deploy directory
+      - cd deploy && npm ci --only=production --no-optional
+      
+      # Remove unnecessary files to reduce package size
+      - rm -rf deploy/node_modules/@types
+      - rm -rf deploy/node_modules/typescript
+      - rm -rf deploy/node_modules/eslint*
+      - rm -rf deploy/node_modules/@eslint*
+      - find deploy/node_modules -name "*.d.ts" -delete
+      - find deploy/node_modules -name "*.map" -delete
+      
+      # Create ZIP package for Lambda
+      - cd deploy && zip -r ../lambda-deployment.zip . -x "*.git*" "*.DS_Store*"
+      - cd ..
+      
+      # Upload to Lambda
+      - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda-deployment.zip
+      
+      # Wait for Lambda update to complete
+      - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME
+      
+      # Clear CloudFront cache
+      - echo Clearing CloudFront cache for distribution $CLOUDFRONT_DISTRIBUTION_ID
+      - INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*" --query 'Invalidation.Id' --output text)
+      - echo Created invalidation with ID: $INVALIDATION_ID
+      - aws cloudfront wait invalidation-completed --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --id $INVALIDATION_ID
+      
+      - echo Deployment completed successfully
+
+artifacts:
+  files:
+    - lambda-deployment.zip
+  name: lambda-deployment-$(date +%Y-%m-%d-%H-%M-%S)
+
+cache:
+  paths:
+    - node_modules/**/*

@@ -204,6 +204,7 @@
 import type { User, UserUpdateForm } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-PROFILE]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth'
@@ -249,7 +250,8 @@ const phoneRules = [
 const loadProfile = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: User }>('/api/profile')
+    const response = await apiClient.get<User>('/profile')
+    const data = response.data!
     profile.value = data
     
     // Populate form
@@ -270,10 +272,7 @@ const updateProfile = async () => {
 
   loading.value = true
   try {
-    await $fetch('/api/profile', {
-      method: 'PUT',
-      body: form
-    })
+    await apiClient.put('/profile', form)
 
     showSuccess('プロフィールを更新しました')
     await loadProfile()
@@ -314,10 +313,7 @@ const uploadImage = async (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    await $fetch('/api/upload/image', {
-      method: 'POST',
-      body: formData
-    })
+    await apiClient.post('/upload/image', formData)
 
     showSuccess('画像をアップロードしました')
     await loadProfile()

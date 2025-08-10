@@ -196,6 +196,7 @@
 import type { Transaction } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-TRANSACTIONS]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth'
@@ -317,8 +318,8 @@ const loadTransactions = async () => {
   loading.value = true
   try {
     logger.debug('取引履歴を読み込み中...', { userId: user.value.user_id })
-    const response = await $fetch<{ success: boolean; data: { items: Transaction[] } }>(
-      `/api/transactions?user_id=${user.value.user_id}`
+    const response = await apiClient.get<{ items: Transaction[] }>(
+      `/transactions?user_id=${user.value.user_id}`
     )
     logger.debug('APIレスポンス:', response)
     
@@ -444,7 +445,7 @@ const getStatusText = (status?: string) => {
 const runDebugTest = async () => {
   try {
     logger.debug('デバッグテスト開始')
-    const response = await $fetch('/api/debug/transactions-test') as any
+    const response = await apiClient.get('/debug/transactions-test')
     logger.debug('デバッグレスポンス:', response)
     
     if (response.success && response.data) {

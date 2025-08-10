@@ -49,10 +49,10 @@
                   color="primary"
                   size="large"
                   variant="elevated"
-                  @click="redirectToLogin"
                   prepend-icon="mdi-login"
                   class="px-8"
                   :loading="isRedirecting"
+                  @click="redirectToLogin"
                 >
                   ログインページへ
                 </v-btn>
@@ -61,9 +61,9 @@
                   color="secondary"
                   size="large"
                   variant="outlined"
-                  @click="goHome"
                   prepend-icon="mdi-home"
                   class="px-8"
+                  @click="goHome"
                 >
                   ホームに戻る
                 </v-btn>
@@ -96,9 +96,8 @@ useSeoMeta({
 const clearSession = async () => {
   try {
     // サーバーサイドのセッションクリア
-    await $fetch('/api/auth/logout', {
-      method: 'POST'
-    })
+    const apiClient = useApiClient()
+    await apiClient.post('/auth/logout')
   } catch (error) {
     console.warn('ログアウト処理中にエラーが発生しましたが、続行します:', error)
   }

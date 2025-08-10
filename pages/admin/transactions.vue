@@ -215,6 +215,7 @@ useHead({
 
 const logger = useLogger({ prefix: '[AdminTransactions]' })
 const { showSuccess: _showSuccess, showError } = useNotification()
+const apiClient = useApiClient()
 
 // State
 const transactions = ref<(Transaction & { user_name: string; user_email: string })[]>([])
@@ -347,8 +348,8 @@ const pendingTransactionCount = computed(() => {
 const loadTransactions = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: { items: (Transaction & { user_name: string; user_email: string })[] } }>('/api/admin/transactions')
-    transactions.value = data.items
+    const response = await apiClient.get<{ items: (Transaction & { user_name: string; user_email: string })[] }>('/admin/transactions')
+    transactions.value = response.data!.items
   } catch (error) {
     logger.error('取引履歴の読み込みに失敗しました:', error)
     showError('取引履歴の取得に失敗しました')
@@ -359,8 +360,8 @@ const loadTransactions = async () => {
 
 const loadUsers = async () => {
   try {
-    const { data } = await $fetch<{ success: boolean; data: { items: User[] } }>('/api/admin/users')
-    users.value = data.items.filter(user => user.status !== 'deleted')
+    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    users.value = response.data!.items.filter(user => user.status !== 'deleted')
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
     showError('ユーザー一覧の取得に失敗しました')

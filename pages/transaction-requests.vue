@@ -9,8 +9,8 @@
         <div class="flex items-center gap-2">
           <button
             class="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 text-secondary-600 hover:text-secondary-800 hover:bg-secondary-100 rounded-lg transition-all duration-200"
-            @click="loadRequests"
             title="更新"
+            @click="loadRequests"
           >
             <Icon name="mdi:refresh" class="text-xl sm:mr-2" />
             <span class="hidden sm:inline">更新</span>
@@ -88,7 +88,7 @@
               @update:model-value="filterRequests"
             />
           </div>
-          <div class="sm:flex-1"></div>
+          <div class="sm:flex-1"/>
           <div class="text-sm text-secondary-500 text-center sm:text-right">
             {{ totalCount }}件中 {{ requests.length }}件を表示
           </div>
@@ -239,6 +239,7 @@ import type { Transaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
 
 const logger = useLogger({ prefix: '[USER-TRANSACTION-REQUESTS]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth'
@@ -296,8 +297,8 @@ const hasPendingRequest = computed(() => {
 const loadRequests = async () => {
   loading.value = true
   try {
-    const response = await $fetch<{ success: boolean; data: { items: Transaction[]; total: number; hasMore: boolean } }>('/api/transaction-requests', {
-      query: {
+    const response = await apiClient.get<{ items: Transaction[]; total: number; hasMore: boolean }>('/transaction-requests', {
+      params: {
         status: selectedStatus.value,
         transaction_type: selectedTransactionType.value,
         page: page.value,
@@ -305,11 +306,9 @@ const loadRequests = async () => {
       }
     })
 
-    if (response.success) {
-      requests.value = response.data.items
-      totalCount.value = response.data.total
-      hasMore.value = response.data.hasMore
-    }
+    requests.value = response.data!.items
+    totalCount.value = response.data!.total
+    hasMore.value = response.data!.hasMore
   } catch (error: any) {
     logger.error('リクエスト取得エラー:', error)
     useNotification().showError(error?.data?.message || 'リクエストの取得に失敗しました')
@@ -383,10 +382,8 @@ const getEmptyMessage = () => {
 // Load current rate
 const loadCurrentRate = async () => {
   try {
-    const response = await $fetch<{ success: boolean; data: any }>('/api/market-rates/latest')
-    if (response.success) {
-      currentRate.value = response.data.btc_jpy_rate
-    }
+    const response = await apiClient.get<any>('/market-rates/latest')
+    currentRate.value = response.data!.btc_jpy_rate
   } catch (error) {
     logger.error('レート取得エラー:', error)
   }

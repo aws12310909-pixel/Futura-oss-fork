@@ -131,6 +131,7 @@ defineProps<{
 const formRef = ref<any>(null)
 const loading = ref(false)
 const currentBalance = ref<number | null>(null)
+const apiClient = useApiClient()
 
 const form = ref<TransactionRequestForm>({
   amount: 0,
@@ -197,10 +198,8 @@ const isInsufficientBalance = computed(() => {
 // Fetch current user balance
 const fetchUserBalance = async () => {
   try {
-    const response = await $fetch<{ success: boolean; data: { btc_balance: number } }>('/api/profile')
-    if (response.success) {
-      currentBalance.value = response.data.btc_balance
-    }
+    const response = await apiClient.get<{ btc_balance: number }>('/profile')
+    currentBalance.value = response.data!.btc_balance
   } catch (error) {
     console.error('Failed to fetch user balance:', error)
     currentBalance.value = null
@@ -222,27 +221,22 @@ const submitRequest = async () => {
   loading.value = true
   
   try {
-    const response = await $fetch<{ success: boolean; data: any; message: string }>('/api/transactions/request', {
-      method: 'POST',
-      body: form.value
-    })
+    const response = await apiClient.post<{ data: any; message: string }>('/transactions/request', form.value)
 
-    if (response.success) {
-      const transactionType = form.value.transaction_type === 'deposit' ? '入金' : '出金'
-      useNotification().showSuccess(response.message || `${transactionType}リクエストを送信しました`)
-      
-      emit('request-created', response.data)
-      emit('update:modelValue', false)
-      
-      // Reset form
-      form.value = {
-        amount: 0,
-        transaction_type: 'deposit',
-        reason: '',
-        memo: ''
-      }
-      formRef.value?.reset()
+    const transactionType = form.value.transaction_type === 'deposit' ? '入金' : '出金'
+    useNotification().showSuccess(response.data!.message || `${transactionType}リクエストを送信しました`)
+    
+    emit('request-created', response.data!.data)
+    emit('update:modelValue', false)
+    
+    // Reset form
+    form.value = {
+      amount: 0,
+      transaction_type: 'deposit',
+      reason: '',
+      memo: ''
     }
+    formRef.value?.reset()
   } catch (error: any) {
     useNotification().showError(error?.data?.message || 'リクエストの送信に失敗しました')
   } finally {

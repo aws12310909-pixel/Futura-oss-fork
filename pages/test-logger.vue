@@ -11,16 +11,16 @@
       <v-card-text>
         <v-row>
           <v-col cols="auto">
-            <v-btn @click="testBasicLogs" color="primary">基本ログテスト</v-btn>
+            <v-btn color="primary" @click="testBasicLogs">基本ログテスト</v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn @click="testAuthLogs" color="success">認証ログテスト</v-btn>
+            <v-btn color="success" @click="testAuthLogs">認証ログテスト</v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn @click="testApiLogs" color="info">APIログテスト</v-btn>
+            <v-btn color="info" @click="testApiLogs">APIログテスト</v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn @click="testDbLogs" color="warning">DBログテスト</v-btn>
+            <v-btn color="warning" @click="testDbLogs">DBログテスト</v-btn>
           </v-col>
         </v-row>
       </v-card-text>
@@ -31,13 +31,13 @@
       <v-card-text>
         <v-row>
           <v-col cols="auto">
-            <v-btn @click="testLifecycleLogs" color="secondary">ライフサイクルログ</v-btn>
+            <v-btn color="secondary" @click="testLifecycleLogs">ライフサイクルログ</v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn @click="testTaggedLogs" color="accent">タグ付きログ</v-btn>
+            <v-btn color="accent" @click="testTaggedLogs">タグ付きログ</v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn @click="testCriticalLogs" color="error">クリティカルログ</v-btn>
+            <v-btn color="error" @click="testCriticalLogs">クリティカルログ</v-btn>
           </v-col>
         </v-row>
       </v-card-text>

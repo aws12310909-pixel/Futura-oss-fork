@@ -138,6 +138,7 @@
 import type { User } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-ADMIN-USERS]' })
+const apiClient = useApiClient()
 
 definePageMeta({
   middleware: 'auth',
@@ -203,7 +204,8 @@ const filteredUsers = computed(() => {
 const loadUsers = async () => {
   loading.value = true
   try {
-    const { data } = await $fetch<{ success: boolean; data: { items: User[] } }>('/api/admin/users')
+    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    const data = response.data!
     users.value = data.items
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
@@ -215,7 +217,7 @@ const loadUsers = async () => {
 
 const suspendUser = async (user: User) => {
   try {
-    await $fetch(`/api/admin/users/${user.user_id}/suspend`, { method: 'POST' })
+    await apiClient.post(`/admin/users/${user.user_id}/suspend`)
     showSuccess(`${user.name}を停止しました`)
     await loadUsers()
   } catch (error) {
@@ -226,7 +228,7 @@ const suspendUser = async (user: User) => {
 
 const activateUser = async (user: User) => {
   try {
-    await $fetch(`/api/admin/users/${user.user_id}/activate`, { method: 'POST' })
+    await apiClient.post(`/admin/users/${user.user_id}/activate`)
     showSuccess(`${user.name}を有効化しました`)
     await loadUsers()
   } catch (error) {
@@ -241,7 +243,7 @@ const deleteUser = async (user: User) => {
   }
 
   try {
-    await $fetch(`/api/admin/users/${user.user_id}/delete`, { method: 'POST' })
+    await apiClient.post(`/admin/users/${user.user_id}/delete`)
     showSuccess(`${user.name}を削除しました`)
     await loadUsers()
   } catch (error) {

@@ -1,4 +1,5 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, ScanCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb'
+import type { DynamoDBDocumentClient} from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, ScanCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb'
 import type { RuntimeConfig } from '@nuxt/schema'
 import { createDynamoDBDocumentClient } from './client-factory'
 

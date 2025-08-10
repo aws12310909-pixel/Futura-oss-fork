@@ -10,7 +10,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<any>> => {
     const query = getQuery(event)
     const includeConnectionTest = query.test === 'true'
 
-    let diagnostics = getEnvironmentDiagnostics()
+    const diagnostics = getEnvironmentDiagnostics()
     let connectionTest = null
 
     if (includeConnectionTest) {

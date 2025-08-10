@@ -83,6 +83,7 @@
 import type { User } from '~/types'
 
 const logger = useLogger({ prefix: '[COMPONENT-RESET-PASSWORD-DIALOG]' })
+const apiClient = useApiClient()
 
 // Props & Emits
 const props = defineProps<{
@@ -121,10 +122,7 @@ const resetPassword = async () => {
   loading.value = true
   
   try {
-    await $fetch(`/api/admin/users/${props.user.user_id}/reset-password`, {
-      method: 'POST',
-      body: { temporary_password: temporaryPassword.value }
-    })
+    await apiClient.post(`/admin/users/${props.user.user_id}/reset-password`, { temporary_password: temporaryPassword.value })
 
     showSuccess(`${props.user.name}のパスワードをリセットしました`)
     resetForm()

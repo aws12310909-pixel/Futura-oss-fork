@@ -32,9 +32,9 @@
                   color="primary"
                   size="large"
                   variant="elevated"
-                  @click="goToLogin"
                   prepend-icon="mdi-login"
                   class="mb-2"
+                  @click="goToLogin"
                 >
                   ログインページへ
                 </v-btn>
@@ -43,8 +43,8 @@
                   color="secondary"
                   size="large"
                   variant="outlined"
-                  @click="goHome"
                   prepend-icon="mdi-home"
+                  @click="goHome"
                 >
                   ホームに戻る
                 </v-btn>
@@ -54,9 +54,9 @@
                   color="warning"
                   size="large"
                   variant="text"
-                  @click="retryRequest"
                   prepend-icon="mdi-refresh"
                   class="mt-2"
+                  @click="retryRequest"
                 >
                   再試行
                 </v-btn>
