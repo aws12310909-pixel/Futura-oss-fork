@@ -101,7 +101,9 @@ phases:
       - echo "Package size information:"
       - du -sh deploy/
       - du -sh lambda-deployment.zip
-      - echo "Total files in package: $(find deploy -type f | wc -l)"
+      - |
+        FILE_COUNT=$(find deploy -type f | wc -l)
+        echo "Total files in package: $FILE_COUNT"
       
       # Upload to Lambda
       - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
