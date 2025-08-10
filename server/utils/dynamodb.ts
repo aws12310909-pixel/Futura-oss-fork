@@ -91,13 +91,15 @@ class DynamoDBService {
     expressionAttributeValues?: DynamoDBRecord
     expressionAttributeNames?: Record<string, string>
     limit?: number
+    select?: 'ALL_ATTRIBUTES' | 'ALL_PROJECTED_ATTRIBUTES' | 'SPECIFIC_ATTRIBUTES' | 'COUNT'
   }) {
     const command = new ScanCommand({
       TableName: tableName,
       FilterExpression: options?.filterExpression,
       ExpressionAttributeValues: options?.expressionAttributeValues,
       ExpressionAttributeNames: options?.expressionAttributeNames,
-      Limit: options?.limit
+      Limit: options?.limit,
+      Select: options?.select
     })
     
     const response = await this.client.send(command)

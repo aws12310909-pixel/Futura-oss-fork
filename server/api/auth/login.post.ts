@@ -4,9 +4,51 @@ import { createSessionFromEvent } from '~/server/utils/session'
 import { getCognitoGroups } from '~/server/utils/cognito-groups'
 import { createCognitoClient } from '~/server/utils/client-factory'
 import { getUserPermissionsByGroups } from '~/server/utils/permission-helpers'
+import { syncCognitoToDatabase } from '~/server/utils/cognito-sync'
+import { getDynamoDBService } from '~/server/utils/dynamodb'
 import { useLogger } from '~/composables/useLogger'
 
 const logger = useLogger({ prefix: '[API-AUTH-LOGIN]' })
+
+/**
+ * 初回ログイン時の自動同期チェック
+ * 管理者ユーザーが初回ログインした際に、DBが空かどうかをチェックして自動的に同期を実行
+ */
+async function checkAndSyncIfNeeded(groups: string[], email: string): Promise<void> {
+  // 管理者ユーザーのみチェック
+  if (!groups.includes('administrator')) {
+    return
+  }
+
+  try {
+    logger.info('管理者ユーザーの初回ログインを検出、DB状態をチェック中...')
+    
+    const dynamoDB = getDynamoDBService()
+    
+    // ユーザーテーブルの件数をチェック
+    const usersScanResult = await dynamoDB.scan('users', {
+      select: 'COUNT'
+    })
+    
+    // ユーザーが存在しない場合は初回デプロイと判断
+    if (usersScanResult.count === 0) {
+      logger.info('DBが空のため、初回デプロイと判断。Cognito同期を実行中...')
+      
+      try {
+        const syncResults = await syncCognitoToDatabase()
+        logger.info('初回同期完了:', syncResults)
+      } catch (syncError) {
+        logger.error('初回同期エラー:', syncError)
+        // 同期エラーでもログインは続行（フォールバック）
+      }
+    } else {
+      logger.debug('DBにユーザーが存在するため、同期は不要')
+    }
+  } catch (error) {
+    logger.warn('DB状態チェックエラー、同期はスキップ:', error)
+    // エラーが発生してもログインは続行
+  }
+}
 
 export default defineEventHandler(async (event) => {
   try {
@@ -102,6 +144,9 @@ export default defineEventHandler(async (event) => {
         logger.debug('フォールバック: 標準ユーザー権限を使用')
       }
     }
+
+    // 初回ログイン時の自動同期チェック
+    await checkAndSyncIfNeeded(groups, attributes.email || '')
 
     // Get permissions dynamically from permission table
     logger.debug('権限を取得中...')

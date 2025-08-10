@@ -72,7 +72,7 @@ export const API_PERMISSIONS: APIPermissions = {
   },
   
   '/api/admin/system/sync-cognito': {
-    'POST': { permissions: ['system:sync'] }
+    'POST': { permissions: ['admin:access'] }
   },
   
   // ユーザーAPI
