@@ -61,16 +61,19 @@ phases:
       # Copy build output to deploy directory
       - cp -r .output deploy/
       
-      # Create ZIP package for Lambda
-      - cd deploy && zip -qr ../lambda-deployment.zip . -x "*.git*" "*.DS_Store*"
-      
-      # Display package size information
+      # Display package size information (before moving to deploy directory)
       - echo "Package size information:"
       - du -sh deploy/
-      - du -sh lambda-deployment.zip
       - |
         FILE_COUNT=$(find deploy -type f | wc -l)
         echo "Total files in package: $FILE_COUNT"
+      
+      # Create ZIP package for Lambda
+      - cd deploy && zip -qr ../lambda-deployment.zip . -x "*.git*" "*.DS_Store*"
+      - cd ..
+      
+      # Display ZIP package size
+      - du -sh lambda-deployment.zip
       
       # Upload to Lambda
       - echo Updating Lambda function $LAMBDA_FUNCTION_NAME
