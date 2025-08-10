@@ -1,11 +1,14 @@
 import type { NotificationState } from '~/types'
 
+// Global notification state
+const globalNotification = ref<NotificationState>({
+  show: false,
+  type: 'info',
+  message: ''
+})
+
 export const useNotification = () => {
-  const notification = ref<NotificationState>({
-    show: false,
-    type: 'info',
-    message: ''
-  })
+  const notification = globalNotification
 
   const showNotification = (
     message: string,

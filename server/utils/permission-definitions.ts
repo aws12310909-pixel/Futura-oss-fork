@@ -115,7 +115,7 @@ export const DEFAULT_GROUP_PERMISSIONS = {
     return PERMISSION_DEFINITIONS.allPermissions.map(p => p.key)
   },
   user: [
-    'profile:read', 'profile:update', 'transaction:read', 'transaction:request', 'dashboard:access'
+    'profile:read', 'profile:update', 'transaction:read', 'transaction:request', 'dashboard:access', 'market_rate:read'
   ]
 }
 
