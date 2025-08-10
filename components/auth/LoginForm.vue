@@ -100,7 +100,10 @@ const handleLogin = async () => {
       showPasswordChangeDialog.value = true
       showSuccess('初回ログインです。新しいパスワードを設定してください。')
     } else {
-      showError('ログインに失敗しました。メールアドレスとパスワードを確認してください。')
+      console.log('result', result)
+      // Show specific error message from server
+      const errorMessage = result?.message || 'ログインに失敗しました。メールアドレスとパスワードを確認してください。'
+      showError(errorMessage)
     }
   } catch (error) {
     logger.error('ログインエラー:', error)
@@ -120,17 +123,6 @@ const handlePasswordChangeSuccess = async (authResult: any) => {
   } catch (error) {
     logger.error('パスワード変更後のログインエラー:', error)
     showError('パスワード変更後のログイン処理でエラーが発生しました')
-  }
-}
-
-// Auto-fill demo credentials
-const _fillDemoCredentials = (type: 'admin' | 'user') => {
-  if (type === 'admin') {
-    form.email = 'admin@example.com'
-    form.password = 'TempAdmin123!'
-  } else {
-    form.email = 'user@example.com'
-    form.password = 'TempUser123!'
   }
 }
 </script>

@@ -434,7 +434,6 @@ const loadDashboardData = async () => {
       apiClient.get<DashboardData>('/dashboard'),
       apiClient.get<{ items: MarketRate[] }>('/market-rates', { params: { limit: 30 } })
     ])
-    
     dashboardData.value = dashboardResponse.data!
     marketRates.value = ratesResponse.data!.items || []
   } catch (error) {

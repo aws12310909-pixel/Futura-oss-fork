@@ -89,8 +89,11 @@ export default defineEventHandler(async (event) => {
     if (authResponse.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
       return {
         success: false,
-        challenge: 'NEW_PASSWORD_REQUIRED',
-        session: authResponse.Session,
+        data: {
+          challenge: 'NEW_PASSWORD_REQUIRED',
+          session: authResponse.Session,
+          message: 'Password change required'
+        },
         message: 'Password change required'
       }
     }
@@ -194,6 +197,39 @@ export default defineEventHandler(async (event) => {
     
     if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error
+    }
+
+    // AWS Cognito authentication errors
+    if (error && typeof error === 'object' && 'name' in error) {
+      const errorName = (error as any).name
+      
+      if (errorName === 'NotAuthorizedException') {
+        return {
+          success: false,
+          message: 'Invalid email or password'
+        }
+      }
+      
+      if (errorName === 'UserNotFoundException') {
+        return {
+          success: false,
+          message: 'Invalid email or password'
+        }
+      }
+      
+      if (errorName === 'UserNotConfirmedException') {
+        return {
+          success: false,
+          message: 'User account not confirmed'
+        }
+      }
+      
+      if (errorName === 'TooManyRequestsException') {
+        return {
+          success: false,
+          message: 'Too many login attempts. Please try again later.'
+        }
+      }
     }
 
     throw createError({

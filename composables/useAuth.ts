@@ -78,25 +78,44 @@ export const useAuth = () => {
 
       // Normal login flow
       const response = await apiClient.post<{ 
-        data?: AuthUser; 
-        challenge?: string; 
-        session?: string; 
+        data?: AuthUser | {
+          challenge: string;
+          session: string;
+          message: string;
+        }; 
         message?: string 
       }>('/auth/login', credentials)
 
-      if (response.data?.data) {
-        user.value = response.data.data
-        saveToCache(response.data.data)
+      console.log('response', response)
+      
+      if (response.data && !('challenge' in response.data)) {
+        // 成功時: dataがAuthUserの場合
+        user.value = response.data as AuthUser
+        saveToCache(response.data as AuthUser)
         // Ensure auth state is properly synchronized before navigation
         await nextTick()
         await navigateTo('/dashboard')
-        return { success: true, data: response.data.data }
-      } else if (response.data?.challenge) {
-        return {
-          success: false,
-          challenge: response.data.challenge,
-          session: response.data.session,
-          message: response.data.message
+        return { success: true, data: response.data }
+      } else if (response.data && 'challenge' in response.data) {
+        // チャレンジ時: dataがchallenge情報の場合
+        const challengeData = response.data as { challenge: string; session: string; message: string }
+        if (challengeData.challenge === 'NEW_PASSWORD_REQUIRED') {
+          // 初回パスワード変更が必要な場合
+          return {
+            success: false,
+            challenge: challengeData.challenge,
+            session: challengeData.session,
+            message: challengeData.message,
+            requiresPasswordChange: true
+          }
+        } else {
+          // その他のチャレンジ
+          return {
+            success: false,
+            challenge: challengeData.challenge,
+            session: challengeData.session,
+            message: challengeData.message
+          }
         }
       }
       

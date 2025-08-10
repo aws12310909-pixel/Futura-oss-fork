@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<CognitoGrou
     }
 
     // システムグループの編集を制限
-    if (groupName === 'administrator' || groupName === 'user') {
+    if (groupName === 'administrator') {
       throw createError({
         statusCode: 400,
         statusMessage: `Cannot modify the system group: ${groupName}`

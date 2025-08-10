@@ -104,6 +104,7 @@ export const useApiClient = (options: ApiClientOptions = {}) => {
       }
 
       const data = await response.json()
+      console.log('data', data)
       return data as ApiResponse<T>
     } catch (error) {
       console.error('API Request Error:', error)
@@ -115,7 +116,7 @@ export const useApiClient = (options: ApiClientOptions = {}) => {
   }
 
   // 便利メソッド
-  const get = <T = any>(url: string, params?: Record<string, string | number | boolean>) =>
+  const get = <T = any>(url: string, params?: Record<string, any>) =>
     request<T>(url, { method: 'GET', params })
 
   const post = <T = any>(url: string, body?: any, headers?: Record<string, string>) =>
