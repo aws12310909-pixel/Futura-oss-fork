@@ -9,7 +9,10 @@ frontend:
     # IMPORTANT - Please verify your build commands
     preBuild:
       commands:
+        - nvm install 20.11.1
+        - nvm use 20.11.1
         - npm ci
+        - ls -al
     build:
       commands:
         # Load environment variables based on STAGE environment variable
