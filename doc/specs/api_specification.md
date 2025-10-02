@@ -1,4 +1,4 @@
-# BTC Mock App - API仕様書
+# M・S CFD App - API仕様書
 
 ## 概要
 

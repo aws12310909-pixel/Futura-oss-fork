@@ -46,8 +46,8 @@ resource "aws_cognito_user_pool" "main" {
     for_each = var.enable_email_verification ? [1] : []
     content {
       default_email_option = "CONFIRM_WITH_CODE"
-      email_message        = "BTC Mock App の認証コードは {####} です。5分以内に入力してください。"
-      email_subject        = "【BTC Mock App】メールアドレス認証"
+      email_message        = "M・S CFD App の認証コードは {####} です。5分以内に入力してください。"
+      email_subject        = "【M・S CFD App】メールアドレス認証"
     }
   }
 

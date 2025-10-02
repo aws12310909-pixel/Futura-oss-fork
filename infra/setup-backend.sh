@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 BTC Mock App - Terraform Backend Setup"
+echo "🚀 M・S CFD App - Terraform Backend Setup"
 echo "=================================================="
 
 # 環境変数の確認

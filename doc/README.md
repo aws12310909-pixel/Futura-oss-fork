@@ -1,4 +1,4 @@
-# BTC Mock App - ドキュメント
+# M・S CFD App - ドキュメント
 
 ## 概要
 

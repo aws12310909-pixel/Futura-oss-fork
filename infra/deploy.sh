@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# BTC Mock App Infrastructure Deployment Script
+# M・S CFD App Infrastructure Deployment Script
 
 set -e
 
-echo "🚀 BTC Mock App - Infrastructure Deployment"
+echo "🚀 M・S CFD App - Infrastructure Deployment"
 echo "=============================================="
 
 # 環境変数の設定

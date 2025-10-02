@@ -294,7 +294,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'ダッシュボード - BTC Mock App'
+  title: 'ダッシュボード - M・S CFD App'
 })
 
 const { showError } = useNotification()

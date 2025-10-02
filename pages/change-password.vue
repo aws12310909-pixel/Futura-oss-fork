@@ -145,7 +145,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'パスワード変更 - BTC Mock App'
+  title: 'パスワード変更 - M・S CFD App'
 })
 
 const { showSuccess, showError } = useNotification()

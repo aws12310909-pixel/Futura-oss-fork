@@ -246,7 +246,7 @@ definePageMeta({
 })
 
 useHead({
-      title: '入出金リクエスト - BTC Mock App'
+      title: '入出金リクエスト - M・S CFD App'
 })
 
 // State

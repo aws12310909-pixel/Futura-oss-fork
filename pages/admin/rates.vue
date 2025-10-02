@@ -173,7 +173,7 @@ definePageMeta({
 })
 
 useHead({
-  title: '相場価格設定 - BTC Mock App'
+  title: '相場価格設定 - M・S CFD App'
 })
 
 const logger = useLogger({ prefix: '[AdminRates]' })

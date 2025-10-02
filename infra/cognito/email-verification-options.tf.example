@@ -11,7 +11,7 @@ resource "aws_cognito_user_pool" "email_verification_enabled" {
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"  # 認証コード方式
     email_message        = "あなたの認証コードは {####} です。"
-    email_subject        = "BTC Mock App - メールアドレス認証"
+    email_subject        = "M・S CFD App - メールアドレス認証"
   }
 
   # アカウント復旧もメール認証ベース

@@ -1,4 +1,4 @@
-# BTC Mock App - ER図
+# M・S CFD App - ER図
 
 ## エンティティ関係図
 

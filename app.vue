@@ -27,9 +27,9 @@
 <script setup>
 // Global meta tags
 useHead({
-  title: 'BTC Mock App',
+  title: 'M・S CFD App',
   meta: [
-    { name: 'description', content: 'BTC Portfolio Management Application' }
+    { name: 'description', content: 'M・S CFD Application' }
   ]
 })
 

@@ -1,8 +1,8 @@
-# BTC Mock App - API ドキュメント
+# M・S CFD App - API ドキュメント
 
 ## 概要
 
-このディレクトリには、BTC Mock App の RESTful API に関する詳細なドキュメントが含まれています。
+このディレクトリには、M・S CFD App の RESTful API に関する詳細なドキュメントが含まれています。
 
 ## ドキュメント一覧
 
