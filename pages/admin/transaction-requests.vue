@@ -216,7 +216,7 @@ definePageMeta({
 })
 
 useHead({
-      title: '入出金リクエスト承認 - BTC Mock App Admin'
+      title: '入出金リクエスト承認 - M・S CFD App Admin'
 })
 
 interface EnhancedTransactionRequest {

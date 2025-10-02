@@ -87,7 +87,7 @@ definePageMeta({
 
 // SEOメタ設定
 useSeoMeta({
-  title: '認証エラー - BTC Mock App',
+  title: '認証エラー - M・S CFD App',
   description: 'セッションが無効または期限切れです。再度ログインしてください。',
   robots: 'noindex, nofollow'
 })

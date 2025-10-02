@@ -1,6 +1,6 @@
-# BTC Mock App Infrastructure
+# M・S CFD App Infrastructure
 
-This directory contains Terraform configurations for the BTC Mock App infrastructure.
+This directory contains Terraform configurations for the M・S CFD App infrastructure.
 
 ## Structure
 

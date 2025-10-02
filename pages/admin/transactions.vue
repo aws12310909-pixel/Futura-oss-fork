@@ -210,7 +210,7 @@ definePageMeta({
 })
 
 useHead({
-  title: '入出金管理 - BTC Mock App'
+  title: '入出金管理 - M・S CFD App'
 })
 
 const logger = useLogger({ prefix: '[AdminTransactions]' })

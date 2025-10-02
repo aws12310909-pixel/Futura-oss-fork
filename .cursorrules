@@ -1,7 +1,7 @@
-# BTC Mock App - Cursor Rules
+# M・S CFD App - Cursor Rules
 
 ## Project Overview
-You are working on BTC Mock App, a Bitcoin portfolio management simulation application built with Nuxt 3, Vue.js, and AWS services.
+You are working on M・S CFD App, a Bitcoin portfolio management simulation application built with Nuxt 3, Vue.js, and AWS services.
 
 ## Tech Stack
 - **Frontend**: Nuxt 3, Vue.js 3, TypeScript

@@ -215,7 +215,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'グループ管理 - BTC Mock App'
+  title: 'グループ管理 - M・S CFD App'
 })
 
 const logger = useLogger({ prefix: '[AdminGroups]' })

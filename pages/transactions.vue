@@ -195,7 +195,7 @@ definePageMeta({
 })
 
 useHead({
-  title: '入出金記録 - BTC Mock App'
+  title: '入出金記録 - M・S CFD App'
 })
 
 const { user } = useAuth()

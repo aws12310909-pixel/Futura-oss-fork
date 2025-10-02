@@ -181,7 +181,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'プロフィール承認 - BTC Mock App'
+  title: 'プロフィール承認 - M・S CFD App'
 })
 
 const logger = useLogger({ prefix: '[AdminApprovals]' })

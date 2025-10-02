@@ -211,7 +211,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'プロフィール - BTC Mock App'
+  title: 'プロフィール - M・S CFD App'
 })
 
 const { showSuccess, showError } = useNotification()

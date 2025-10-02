@@ -1,4 +1,4 @@
-# BTC Mock App - アプリケーション全体ワークフロー
+# M・S CFD App - アプリケーション全体ワークフロー
 
 ## 概要
 
@@ -433,7 +433,7 @@ graph LR
 
 ```mermaid
 mindmap
-  root((BTC Mock App<br/>メトリクス))
+  root((M・S CFD App<br/>メトリクス))
     ユーザーメトリクス
       アクティブユーザー数
       新規ユーザー数

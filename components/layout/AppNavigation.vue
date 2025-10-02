@@ -13,7 +13,7 @@
       <div class="flex items-center space-x-3">
         <Icon name="mdi:bitcoin" class="text-2xl text-primary-500 flex-shrink-0" />
         <div v-show="!rail || isMobile" class="min-w-0">
-          <h2 class="text-sm font-semibold text-gray-900 truncate">BTC Mock App</h2>
+          <h2 class="text-sm font-semibold text-gray-900 truncate">M・S CFD App</h2>
           <p class="text-xs text-gray-500 truncate">{{ user?.name }}</p>
         </div>
       </div>
