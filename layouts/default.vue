@@ -26,7 +26,7 @@
       </v-toolbar-title>
     </v-app-bar>
     
-    <v-main :class="{ 'pl-64': isAuthenticated && !isMobile }">
+    <v-main>
       <div class="min-h-screen bg-gray-50">
         <slot />
       </div>
@@ -40,7 +40,7 @@ const { isAuthenticated } = useAuth()
 // Mobile detection without Vuetify dependency
 const isMobile = ref(false)
 // Drawer state for mobile navigation
-const drawer = ref(false)
+const drawer = ref(true)
 
 // Setup mobile detection
 onMounted(() => {
@@ -49,9 +49,13 @@ onMounted(() => {
       const wasMobile = isMobile.value
       isMobile.value = window.innerWidth < 768
       
-      // Close drawer when switching from desktop to mobile
-      if (!wasMobile && isMobile.value) {
+      // Adjust drawer state based on screen size
+      if (isMobile.value) {
+        // On mobile, close drawer by default
         drawer.value = false
+      } else {
+        // On desktop, open drawer by default
+        drawer.value = true
       }
     }
     
