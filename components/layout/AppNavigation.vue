@@ -4,6 +4,7 @@
     :rail="rail && !isMobile"
     :permanent="!isMobile"
     :temporary="isMobile"
+    :floating="false"
     class="bg-white border-r border-gray-200"
     width="256"
     rail-width="64"

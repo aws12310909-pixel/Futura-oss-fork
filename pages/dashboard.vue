@@ -15,65 +15,6 @@
       </v-btn>
     </div>
 
-    <!-- BTC Rate History - Full Width -->
-    <div class="mb-8">
-      <v-card class="card-shadow">
-        <v-card-title class="px-6 py-4 border-b">
-          <div class="flex items-center justify-between w-full">
-            <h3 class="text-lg font-semibold text-gray-900">BTC価格推移</h3>
-            <div class="flex items-center space-x-2">
-              <v-chip color="orange" size="small" variant="flat">
-                <Icon name="mdi:bitcoin" class="mr-1" />
-                市場レート
-              </v-chip>
-            </div>
-          </div>
-        </v-card-title>
-        <v-card-text class="p-6">
-          <div v-if="marketRates.length">
-            <!-- Rate Summary Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-orange-50 rounded-lg">
-              <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">期間変動</p>
-                <p class="text-lg font-bold" :class="rateChangeClass">
-                  {{ rateChangeText }}
-                </p>
-              </div>
-              <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">最高価格</p>
-                <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(maxRate) }}
-                </p>
-              </div>
-              <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">最安価格</p>
-                <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(minRate) }}
-                </p>
-              </div>
-              <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">平均価格</p>
-                <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(avgRate) }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Rate Chart -->
-            <div class="h-64">
-              <UserBTCRateChart :data="marketRates" />
-            </div>
-          </div>
-          <div v-else class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div class="text-center">
-              <Icon name="mdi:chart-timeline-variant" class="text-4xl text-gray-400 mb-2" />
-              <p class="text-gray-500">相場データがありません</p>
-              <p class="text-sm text-gray-400 mt-2">管理者が相場レートを登録すると表示されます</p>
-            </div>
-          </div>
-        </v-card-text>
-      </v-card>
-    </div>
 
     <!-- Asset History - Full Width -->
     <div class="mb-8">
