@@ -199,44 +199,88 @@ resource "aws_dynamodb_table" "permissions" {
 }
 
 # Initial permissions data for administrator group
-resource "aws_dynamodb_table_item" "administrator_permissions" {
-  table_name = aws_dynamodb_table.permissions.name
-  hash_key   = aws_dynamodb_table.permissions.hash_key
+# Note: This item already exists in DynamoDB and is managed outside of Terraform
+# to avoid conflicts. Update permissions manually or via application code.
+#
+# resource "aws_dynamodb_table_item" "administrator_permissions" {
+#   table_name = aws_dynamodb_table.permissions.name
+#   hash_key   = aws_dynamodb_table.permissions.hash_key
+#
+#   item = jsonencode({
+#     group_name = {
+#       S = "administrator"
+#     }
+#     permissions = {
+#       L = [
+#         { S = "user:create" },
+#         { S = "user:read" },
+#         { S = "user:update" },
+#         { S = "user:delete" },
+#         { S = "admin:access" },
+#         { S = "group:create" },
+#         { S = "group:read" },
+#         { S = "group:update" },
+#         { S = "group:delete" },
+#         { S = "transaction:create" },
+#         { S = "transaction:read" },
+#         { S = "transaction:request" },
+#         { S = "transaction:approve" },
+#         { S = "market_rate:create" },
+#         { S = "market_rate:read" },
+#         { S = "profile:read" },
+#         { S = "profile:update" },
+#         { S = "dashboard:access" },
+#         { S = "batch:execute" },
+#         { S = "batch:read" }
+#       ]
+#     }
+#     description = {
+#       S = "Full system administrator permissions - all features accessible"
+#     }
+#     created_at = {
+#       S = timestamp()
+#     }
+#     updated_at = {
+#       S = timestamp()
+#     }
+#   })
+# }
 
-  item = jsonencode({
-    group_name = {
-      S = "administrator"
-    }
-    permissions = {
-      L = [
-        { S = "user:create" },
-        { S = "user:read" },
-        { S = "user:update" },
-        { S = "user:delete" },
-        { S = "admin:access" },
-        { S = "group:create" },
-        { S = "group:read" },
-        { S = "group:update" },
-        { S = "group:delete" },
-        { S = "transaction:create" },
-        { S = "transaction:read" },
-        { S = "transaction:request" },
-        { S = "transaction:approve" },
-        { S = "market_rate:create" },
-        { S = "market_rate:read" },
-        { S = "profile:read" },
-        { S = "profile:update" },
-        { S = "dashboard:access" }
-      ]
-    }
-    description = {
-      S = "Full system administrator permissions - all features accessible"
-    }
-    created_at = {
-      S = timestamp()
-    }
-    updated_at = {
-      S = timestamp()
-    }
-  })
+# Batch Operations Table
+resource "aws_dynamodb_table" "batch_operations" {
+  name           = "${var.project_name}-${var.environment}-batch-operations"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "batch_id"
+
+  attribute {
+    name = "batch_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "status"
+    type = "S"
+  }
+
+  attribute {
+    name = "created_at"
+    type = "S"
+  }
+
+  # GSI for status + timestamp queries
+  global_secondary_index {
+    name            = "StatusTimestampIndex"
+    hash_key        = "status"
+    range_key       = "created_at"
+    projection_type = "ALL"
+  }
+
+  # Point-in-time recovery
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-batch-operations"
+  }
 }
