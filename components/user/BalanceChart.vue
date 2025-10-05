@@ -36,7 +36,7 @@ const drawChart = () => {
   ctx.clearRect(0, 0, width, height)
 
   // Get data values
-  const values = props.data.map(item => item.jpy_value)
+  const values = props.data.map(item => item.btc_amount)
   const _dates = props.data.map(item => item.date)
   
   const maxValue = Math.max(...values, 0)
@@ -80,7 +80,7 @@ const drawChart = () => {
     ctx.moveTo(getX(0), height - padding)
     
     props.data.forEach((item, index) => {
-      ctx.lineTo(getX(index), getY(item.jpy_value))
+      ctx.lineTo(getX(index), getY(item.btc_amount))
     })
     
     ctx.lineTo(getX(props.data.length - 1), height - padding)
@@ -95,7 +95,7 @@ const drawChart = () => {
   
   props.data.forEach((item, index) => {
     const x = getX(index)
-    const y = getY(item.jpy_value)
+    const y = getY(item.btc_amount)
     
     if (index === 0) {
       ctx.moveTo(x, y)
@@ -110,7 +110,7 @@ const drawChart = () => {
   ctx.fillStyle = '#22c55e'
   props.data.forEach((item, index) => {
     const x = getX(index)
-    const y = getY(item.jpy_value)
+    const y = getY(item.btc_amount)
     
     ctx.beginPath()
     ctx.arc(x, y, 3, 0, 2 * Math.PI)
@@ -135,11 +135,13 @@ const drawChart = () => {
   for (let i = 0; i <= 4; i++) {
     const value = minValue + (i / 4) * valueRange
     const y = height - padding - ((value - minValue) / valueRange) * (height - 2 * padding)
-    const label = value >= 1000000 
-      ? `¥${(value / 1000000).toFixed(1)}M`
-      : value >= 1000
-      ? `¥${(value / 1000).toFixed(0)}K`
-      : `¥${value.toFixed(0)}`
+    const label = value >= 1 
+      ? `${value.toFixed(2)}`
+      : value >= 0.01
+      ? `${value.toFixed(4)}`
+      : value >= 0.0001
+      ? `${value.toFixed(6)}`
+      : `${value.toFixed(8)}`
     ctx.fillText(label, padding - 10, y + 4)
   }
 }

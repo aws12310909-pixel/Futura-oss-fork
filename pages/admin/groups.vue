@@ -149,7 +149,6 @@
               @click="openUserManagementDialog(item)"
             />
             <v-btn
-              v-if="!isSystemGroup(item.GroupName)"
               size="small"
               variant="text"
               color="primary"

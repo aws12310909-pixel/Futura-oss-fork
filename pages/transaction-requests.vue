@@ -145,24 +145,21 @@
               >
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <span 
+                    <span
                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="request.transaction_type === 'deposit' 
-                        ? 'bg-green-100 text-green-800' 
+                      :class="request.transaction_type === 'deposit'
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'"
                     >
-                      {{ request.transaction_type === 'deposit' ? '入金' : '出金' }}
+                      {{ getTransactionTypeLabel(request.transaction_type) }}
                     </span>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-mono text-gray-900">
                     <span :class="request.transaction_type === 'deposit' ? 'text-green-600' : 'text-red-600'">
-                      {{ request.transaction_type === 'deposit' ? '+' : '-' }}{{ formatBTC(request.amount) }} BTC
+                      {{ formatBTC(request.amount, request.transaction_type) }} BTC
                     </span>
-                  </div>
-                  <div class="text-sm text-gray-500">
-                    ¥{{ formatCurrency(request.amount * currentRate) }}
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -237,13 +234,14 @@
 import { ref, computed, onMounted } from 'vue'
 import type { Transaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
-
-const logger = useLogger({ prefix: '[USER-TRANSACTION-REQUESTS]' })
-const apiClient = useApiClient()
+import { getTransactionTypeLabel, getTransactionTypeColor } from '~/utils/transaction'
 
 definePageMeta({
   middleware: 'auth'
 })
+
+const logger = useLogger({ prefix: '[USER-TRANSACTION-REQUESTS]' })
+const apiClient = useApiClient()
 
 useHead({
       title: '入出金リクエスト - M・S CFD App'
@@ -301,12 +299,13 @@ const loadRequests = async () => {
       params: {
         status: selectedStatus.value,
         transaction_type: selectedTransactionType.value,
-        page: page.value,
-        limit: limit.value
+        page: page.value.toString(),
+        limit: limit.value.toString()
       }
     })
 
-    requests.value = response.data!.items
+    // 資産運用タイプを除外
+    requests.value = response.data!.items.filter(item => item.transaction_type !== 'asset_management')
     totalCount.value = response.data!.total
     hasMore.value = response.data!.hasMore
   } catch (error: any) {
@@ -336,8 +335,14 @@ const onRequestCreated = (data: any) => {
 }
 
 // Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
+const formatBTC = (amount: number, transactionType?: string) => {
+  const formattedAmount = amount.toFixed(8)
+  if (transactionType === 'deposit') {
+    return `+${formattedAmount}`
+  } else if (transactionType === 'withdrawal') {
+    return `${formattedAmount}`
+  }
+  return formattedAmount
 }
 
 const formatCurrency = (value: number) => {

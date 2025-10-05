@@ -1,6 +1,7 @@
 import type { Transaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
 import { getDynamoDBService } from '~/server/utils/dynamodb'
+import { createError } from 'h3'
 
 /**
  * 取引が承認済みかどうかを判定
@@ -23,9 +24,15 @@ export function filterApprovedTransactions(transactions: Transaction[]): Transac
  */
 export function calculateBalance(transactions: Transaction[]): number {
   return filterApprovedTransactions(transactions).reduce((balance, transaction) => {
-    return transaction.transaction_type === 'deposit' 
-      ? balance + transaction.amount 
-      : balance - transaction.amount
+    if (transaction.transaction_type === 'deposit') {
+      return balance + transaction.amount
+    } else if (transaction.transaction_type === 'withdrawal') {
+      return balance - transaction.amount
+    } else if (transaction.transaction_type === 'asset_management') {
+      // 資産運用: amountが正負の値を持つのでそのまま加算
+      return balance + transaction.amount
+    }
+    return balance
   }, 0)
 }
 
@@ -75,5 +82,141 @@ export async function getTotalBalance(userId: string): Promise<number> {
   } catch (error: unknown) {
     console.error('[TransactionHelpers-Balance] 残高計算に失敗:', error)
     return 0
+  }
+}
+
+// ============================================================================
+// 取引バリデーション関数群
+// ============================================================================
+
+/**
+ * 取引バリデーション用の共通インターフェース
+ */
+export interface TransactionValidationData {
+  amount: number
+  transaction_type: string
+  reason?: string
+  user_id?: string
+}
+
+/**
+ * 取引の基本バリデーション（必須フィールド、transaction_type、amountの整合性）
+ */
+export function validateTransactionBasic(data: TransactionValidationData): void {
+  // 必須フィールドのチェック
+  if (!data.amount || !data.transaction_type) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Amount and transaction_type are required'
+    })
+  }
+
+  // transaction_typeの有効性チェック
+  if (!['deposit', 'withdrawal'].includes(data.transaction_type)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid transaction_type. Must be deposit or withdrawal'
+    })
+  }
+
+  // transaction_typeに応じたamountのバリデーション
+  if (data.transaction_type === 'deposit') {
+    // 入金の場合は正の値である必要がある
+    if (data.amount <= 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Amount must be greater than 0 for deposit transactions'
+      })
+    }
+  } else if (data.transaction_type === 'withdrawal') {
+    // 出金の場合は負の値である必要がある
+    if (data.amount >= 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Amount must be negative for withdrawal transactions'
+      })
+    }
+  }
+}
+
+/**
+ * 取引リクエスト用のバリデーション（reasonも必須）
+ */
+export function validateTransactionRequest(data: TransactionValidationData): void {
+  // 基本バリデーション
+  validateTransactionBasic(data)
+
+  // reasonの必須チェック
+  if (!data.reason) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Reason is required for transaction requests'
+    })
+  }
+}
+
+/**
+ * 管理者取引作成用のバリデーション（user_idも必須）
+ */
+export function validateAdminTransaction(data: TransactionValidationData): void {
+  // 基本バリデーション
+  validateTransactionBasic(data)
+
+  // user_idとreasonの必須チェック
+  if (!data.user_id || !data.reason) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Required fields are missing'
+    })
+  }
+}
+
+/**
+ * 出金時の残高チェック
+ */
+export async function validateWithdrawalBalance(
+  userId: string, 
+  amount: number, 
+  getBalanceFunction: (userId: string) => Promise<number>
+): Promise<void> {
+  if (amount >= 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Amount must be negative for withdrawal transactions'
+    })
+  }
+
+  const currentBalance = await getBalanceFunction(userId)
+  
+  if (Math.abs(amount) > currentBalance) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Insufficient balance for withdrawal'
+    })
+  }
+}
+
+/**
+ * 管理者用の出金残高チェック（より詳細なエラーメッセージ）
+ */
+export async function validateAdminWithdrawalBalance(
+  userId: string, 
+  amount: number, 
+  getBalanceFunction: (userId: string) => Promise<number>
+): Promise<void> {
+  if (amount >= 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Amount must be negative for withdrawal transactions'
+    })
+  }
+
+  const currentBalance = await getBalanceFunction(userId)
+  
+  if (currentBalance < Math.abs(amount)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Insufficient balance. Current balance: ${currentBalance} BTC`
+    })
   }
 }

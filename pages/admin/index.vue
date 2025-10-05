@@ -309,6 +309,14 @@ const managementItems = [
     to: '/admin/approvals',
     bgColor: 'bg-red-100',
     iconColor: 'text-red-600'
+  },
+  {
+    title: 'BTC一括調整',
+    description: '全ユーザーのBTC残高を一括で増減',
+    icon: 'mdi:bitcoin',
+    to: '/admin/batch-operations',
+    bgColor: 'bg-yellow-100',
+    iconColor: 'text-yellow-600'
   }
 ]
 

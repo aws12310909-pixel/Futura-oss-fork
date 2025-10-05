@@ -84,20 +84,6 @@
                 />
               </div>
 
-              <!-- Exchange Rate Display -->
-              <div v-if="latestRate" class="bg-gray-50 p-4 rounded-lg border">
-                <div class="flex items-center justify-between text-sm">
-                  <span class="font-medium text-gray-700">現在の相場レート:</span>
-                  <span class="font-mono text-gray-900">1 BTC = {{ formatCurrency(latestRate.btc_jpy_rate) }} JPY</span>
-                </div>
-                <div class="flex items-center justify-between text-sm mt-2">
-                  <span class="font-medium text-gray-700">換算後金額:</span>
-                  <span class="font-mono text-blue-600">
-                    {{ selectedCurrency === 'JPY' ? `${form.amount.toFixed(8)} BTC` : `${jpyAmount.toLocaleString()} JPY` }}
-                  </span>
-                </div>
-              </div>
-
               <!-- Rate Loading/Error State -->
               <v-alert
                 v-if="rateError"
@@ -133,7 +119,7 @@
         </v-form>
 
         <v-alert
-          v-if="form.transaction_type === 'withdrawal' && selectedUserBalance !== null && form.amount > selectedUserBalance"
+          v-if="form.transaction_type === 'withdrawal' && selectedUserBalance !== null && Math.abs(form.amount) > selectedUserBalance"
           type="error"
           variant="tonal"
           class="mt-4"
@@ -179,6 +165,7 @@
 
 <script setup lang="ts">
 import type { TransactionCreateForm, User, MarketRate } from '~/types'
+import { getTransactionTypeLabel } from '~/utils/transaction'
 
 const apiClient = useApiClient()
 
@@ -228,14 +215,14 @@ const transactionTypeOptions = [
 
 const currencyOptions = [
   { title: 'BTC', value: 'BTC' },
-  { title: 'JPY', value: 'JPY' }
+  // { title: 'JPY', value: 'JPY' }
 ]
 
 // Computed
 const isInvalidWithdrawal = computed(() => {
   return form.transaction_type === 'withdrawal' && 
          selectedUserBalance.value !== null && 
-         form.amount > selectedUserBalance.value
+         Math.abs(form.amount) > selectedUserBalance.value
 })
 
 // Validation rules
@@ -247,11 +234,11 @@ const typeRules = [
   (v: string) => !!v || '取引種別を選択してください'
 ]
 
-const amountRules = [
+const amountRules = computed(() => [
   (v: number) => !!v || '金額は必須です',
   (v: number) => v > 0 || '金額は正の数値で入力してください',
   (v: number) => v <= 1000 || '金額が大きすぎます（最大1000 BTC）'
-]
+])
 
 const jpyAmountRules = [
   (v: number) => !!v || '金額は必須です',
@@ -279,8 +266,8 @@ const createTransaction = async () => {
   }
 
   const selectedUser = props.users.find(u => u.user_id === form.user_id)
-  const confirmMessage = `${selectedUser?.name}に${form.transaction_type === 'deposit' ? '入金' : '出金'}（${form.amount} BTC）を実行してもよろしいですか？`
-  
+  const confirmMessage = `${selectedUser?.name}に${getTransactionTypeLabel(form.transaction_type)}（${form.amount} BTC）を実行してもよろしいですか？`
+
   if (!confirm(confirmMessage)) {
     return
   }
@@ -288,7 +275,13 @@ const createTransaction = async () => {
   loading.value = true
   
   try {
-    await apiClient.post('/admin/transactions', form)
+    // 出金の場合は負の値に変換して送信
+    const submitData = {
+      ...form,
+      amount: form.transaction_type === 'withdrawal' ? -Math.abs(form.amount) : form.amount
+    }
+    
+    await apiClient.post('/admin/transactions', submitData)
 
     showSuccess('取引を追加しました')
     resetForm()
@@ -320,7 +313,7 @@ const loadLatestRate = async () => {
     const apiClient = useApiClient()
     const response = await apiClient.get<{ success: boolean; data: MarketRate }>('/market-rates/latest')
     if (response.success && response.data) {
-      latestRate.value = response.data
+      latestRate.value = response.data.data
     } else {
       throw new Error('No market rate data available')
     }
@@ -374,7 +367,7 @@ const onUserChange = async (userId: string) => {
   try {
     const apiClient = useApiClient()
     const { data } = await apiClient.get<{ success: boolean; data: { btc_balance: number } }>(`/admin/users/${userId}/balance`)
-    selectedUserBalance.value = data.btc_balance
+    selectedUserBalance.value = data?.data?.btc_balance || 0
   } catch (error) {
     logger.error('ユーザー残高の取得に失敗しました:', error)
     selectedUserBalance.value = null

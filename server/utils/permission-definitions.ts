@@ -99,6 +99,14 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition = {
       permissions: [
         { key: 'market_rate:create', label: 'レート作成', description: '市場レートの作成・更新' }
       ]
+    },
+    batch_operations: {
+      label: 'BTC一括調整',
+      level: 'admin',
+      permissions: [
+        { key: 'batch:execute', label: 'BTC一括調整実行', description: 'BTC残高の一括調整実行' },
+        { key: 'batch:read', label: 'BTC一括調整閲覧', description: 'BTC一括調整履歴の閲覧' }
+      ]
     }
   },
   get allPermissions() {

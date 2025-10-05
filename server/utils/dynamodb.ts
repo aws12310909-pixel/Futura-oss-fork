@@ -111,13 +111,14 @@ class DynamoDBService {
   }
 
   // Helper methods for specific tables
-  getTableName(table: 'users' | 'transactions' | 'market_rates' | 'sessions' | 'permissions'): string {
+  getTableName(table: 'users' | 'transactions' | 'market_rates' | 'sessions' | 'permissions' | 'batch_operations'): string {
     const tableMap = {
       'users': this.config.dynamodbUsersTable,
       'transactions': this.config.dynamodbTransactionsTable,
       'market_rates': this.config.dynamodbMarketRatesTable,
       'sessions': this.config.dynamodbSessionsTable,
-      'permissions': this.config.dynamodbPermissionsTable
+      'permissions': this.config.dynamodbPermissionsTable,
+      'batch_operations': this.config.dynamodbBatchOperationsTable
     }
     
     const tableName = tableMap[table]

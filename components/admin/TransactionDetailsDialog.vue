@@ -15,26 +15,26 @@
           <div class="flex items-center justify-between py-3 border-b">
             <span class="text-gray-600">取引種別</span>
             <v-chip
-              :color="transaction.transaction_type === 'deposit' ? 'success' : 'error'"
+              :color="getTransactionTypeColor(transaction.transaction_type)"
               size="small"
               variant="flat"
             >
-              <Icon 
-                :name="transaction.transaction_type === 'deposit' ? 'mdi:plus' : 'mdi:minus'" 
-                class="mr-1" 
+              <Icon
+                :name="getTransactionTypeIcon(transaction.transaction_type)"
+                class="mr-1"
               />
-              {{ transaction.transaction_type === 'deposit' ? '入金' : '出金' }}
+              {{ getTransactionTypeLabel(transaction.transaction_type) }}
             </v-chip>
           </div>
 
           <!-- Amount -->
           <div class="flex items-center justify-between py-3 border-b">
             <span class="text-gray-600">金額</span>
-            <span 
+            <span
               class="font-mono font-semibold text-lg"
-              :class="transaction.transaction_type === 'deposit' ? 'text-green-600' : 'text-red-600'"
+              :class="getTransactionTypeTextColor(transaction.transaction_type)"
             >
-              {{ transaction.transaction_type === 'deposit' ? '+' : '-' }}{{ transaction.amount }} BTC
+              {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{ Math.abs(transaction.amount) }} BTC
             </span>
           </div>
 
@@ -96,6 +96,13 @@
 
 <script setup lang="ts">
 import type { Transaction } from '~/types'
+import { 
+  getTransactionTypeLabel, 
+  getTransactionTypeColor, 
+  getTransactionTypeIcon, 
+  getTransactionTypeTextColor, 
+  getTransactionTypeSign 
+} from '~/utils/transaction'
 
 // Props & Emits
 const _props = defineProps<{

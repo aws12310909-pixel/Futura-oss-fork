@@ -126,9 +126,6 @@
                   <div class="text-sm font-mono text-gray-900">
                     {{ formatBTC(request.amount) }} BTC
                   </div>
-                  <div class="text-sm text-gray-500">
-                    ¥{{ formatCurrency(request.amount * currentRate) }}
-                  </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="text-sm text-gray-900 max-w-xs truncate" :title="request.reason">
@@ -206,6 +203,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { PaginatedResponse } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
+import { getTransactionTypeLabel } from '~/utils/transaction'
 
 const logger = useLogger({ prefix: '[ADMIN-TRANSACTION-REQUESTS]' })
 const apiClient = useApiClient()
@@ -225,7 +223,7 @@ interface EnhancedTransactionRequest {
   user_name: string
   user_email: string
   amount: number
-  transaction_type: 'deposit'
+  transaction_type: 'deposit' | 'withdrawal' | 'asset_management'
   status: 'pending' | 'approved' | 'rejected'
   requested_at: string
   processed_at?: string
@@ -287,7 +285,8 @@ const loadRequests = async () => {
       }
     })
 
-    requests.value = response.data!.items
+    // 資産運用タイプを除外
+    requests.value = response.data!.items.filter(item => item.transaction_type !== 'asset_management')
     totalCount.value = response.data!.total
     hasMore.value = response.data!.hasMore
   } catch (error: any) {
@@ -309,7 +308,7 @@ const approveRequest = async (request: EnhancedTransactionRequest) => {
       status: TRANSACTION_STATUS.APPROVED
     })
 
-            useNotification().showSuccess(`${request.user_name}さんの${request.transaction_type === 'deposit' ? '入金' : '出金'}リクエストを承認しました`)
+            useNotification().showSuccess(`${request.user_name}さんの${getTransactionTypeLabel(request.transaction_type)}リクエストを承認しました`)
 
     loadRequests()
   } catch (error: any) {

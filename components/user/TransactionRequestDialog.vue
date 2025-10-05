@@ -192,7 +192,7 @@ const maxBtcAmount = computed(() => {
 const isInsufficientBalance = computed(() => {
   return form.value.transaction_type === 'withdrawal' && 
          isBalanceLoaded.value && 
-         form.value.amount > safeCurrentBalance.value
+         Math.abs(form.value.amount) > safeCurrentBalance.value
 })
 
 // Fetch current user balance
@@ -221,7 +221,13 @@ const submitRequest = async () => {
   loading.value = true
   
   try {
-    const response = await apiClient.post<{ data: any; message: string }>('/transactions/request', form.value)
+    // 出金の場合は負の値に変換して送信
+    const submitData = {
+      ...form.value,
+      amount: form.value.transaction_type === 'withdrawal' ? -Math.abs(form.value.amount) : form.value.amount
+    }
+    
+    const response = await apiClient.post<{ data: any; message: string }>('/transactions/request', submitData)
 
     const transactionType = form.value.transaction_type === 'deposit' ? '入金' : '出金'
     useNotification().showSuccess(response.data!.message || `${transactionType}リクエストを送信しました`)

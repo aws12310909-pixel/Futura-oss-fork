@@ -43,20 +43,6 @@
       />
     </div>
 
-    <!-- Exchange Rate Display -->
-    <div v-if="latestRate" class="bg-gray-50 p-4 rounded-lg border">
-      <div class="flex items-center justify-between text-sm">
-        <span class="font-medium text-gray-700">現在の相場レート:</span>
-        <span class="font-mono text-gray-900">1 BTC = {{ formatCurrency(latestRate.btc_jpy_rate) }} JPY</span>
-      </div>
-      <div class="flex items-center justify-between text-sm mt-2">
-        <span class="font-medium text-gray-700">換算後金額:</span>
-        <span class="font-mono text-blue-600">
-          {{ selectedCurrency === 'JPY' ? `${(btcAmount || 0).toFixed(8)} BTC` : `${(jpyAmount || 0).toLocaleString()} JPY` }}
-        </span>
-      </div>
-    </div>
-
     <!-- Rate Loading/Error State -->
     <v-alert
       v-if="rateError"
@@ -105,7 +91,7 @@ const rateError = ref<boolean>(false)
 // Options
 const currencyOptions = [
   { title: 'BTC', value: 'BTC' },
-  { title: 'JPY', value: 'JPY' }
+  // { title: 'JPY', value: 'JPY' }
 ]
 
 // Validation rules
