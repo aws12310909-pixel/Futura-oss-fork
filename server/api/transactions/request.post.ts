@@ -3,6 +3,7 @@ import { useLogger } from '~/composables/useLogger'
 import type { TransactionRequestForm, EnhancedTransaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
 import { generateTransactionId } from '~/server/utils/uuid'
+import { validateTransactionRequest, validateWithdrawalBalance, getTotalBalance } from '~/server/utils/transaction-helpers'
 
 export default defineEventHandler(async (event) => {
   const logger = useLogger({ prefix: '[TransactionRequest]' })
@@ -14,34 +15,12 @@ export default defineEventHandler(async (event) => {
     // リクエストボディの取得とバリデーション
     const body = await readBody<TransactionRequestForm>(event)
     
-    if (!body.amount || !body.reason || !body.transaction_type) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Amount, reason, and transaction_type are required'
-      })
-    }
+    // 共通バリデーション関数を使用
+    validateTransactionRequest(body)
     
-    if (body.amount <= 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Amount must be greater than 0'
-      })
-    }
-
-    // 入金の場合の金額制限は削除
-
     // 出金の場合は残高チェック
     if (body.transaction_type === 'withdrawal') {
-      // ユーザーの現在の残高を取得
-      const { getTotalBalance } = await import('~/server/utils/transaction-helpers')
-      const currentBalance = await getTotalBalance(currentUser.user_id)
-      
-      if (body.amount > currentBalance) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Insufficient balance for withdrawal'
-        })
-      }
+      await validateWithdrawalBalance(currentUser.user_id, body.amount, getTotalBalance)
     }
     
     const dynamodb = getDynamoDBService()

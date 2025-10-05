@@ -161,9 +161,6 @@
                       {{ formatBTC(request.amount, request.transaction_type) }} BTC
                     </span>
                   </div>
-                  <div class="text-sm text-gray-500">
-                    ¥{{ formatCurrency(request.amount * currentRate) }}
-                  </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="text-sm text-gray-900 max-w-xs">
@@ -302,8 +299,8 @@ const loadRequests = async () => {
       params: {
         status: selectedStatus.value,
         transaction_type: selectedTransactionType.value,
-        page: page.value,
-        limit: limit.value
+        page: page.value.toString(),
+        limit: limit.value.toString()
       }
     })
 
@@ -343,7 +340,7 @@ const formatBTC = (amount: number, transactionType?: string) => {
   if (transactionType === 'deposit') {
     return `+${formattedAmount}`
   } else if (transactionType === 'withdrawal') {
-    return `-${formattedAmount}`
+    return `${formattedAmount}`
   }
   return formattedAmount
 }

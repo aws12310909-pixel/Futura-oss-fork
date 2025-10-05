@@ -126,9 +126,6 @@
                   <div class="text-sm font-mono text-gray-900">
                     {{ formatBTC(request.amount) }} BTC
                   </div>
-                  <div class="text-sm text-gray-500">
-                    ¥{{ formatCurrency(request.amount * currentRate) }}
-                  </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="text-sm text-gray-900 max-w-xs truncate" :title="request.reason">

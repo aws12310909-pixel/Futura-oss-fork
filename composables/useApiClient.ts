@@ -116,8 +116,8 @@ export const useApiClient = (options: ApiClientOptions = {}) => {
   }
 
   // 便利メソッド
-  const get = <T = any>(url: string, params?: Record<string, any>) =>
-    request<T>(url, { method: 'GET', params })
+  const get = <T = any>(url: string, options?: { params?: Record<string, string | number | boolean> }) =>
+    request<T>(url, { method: 'GET', params: options?.params })
 
   const post = <T = any>(url: string, body?: any, headers?: Record<string, string>) =>
     request<T>(url, { method: 'POST', body, headers })

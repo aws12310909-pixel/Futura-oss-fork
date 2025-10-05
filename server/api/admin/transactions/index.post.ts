@@ -1,5 +1,5 @@
 import { getDynamoDBService } from '~/server/utils/dynamodb'
-import { calculateBalance } from '~/server/utils/transaction-helpers'
+import { calculateBalance, validateAdminTransaction, validateAdminWithdrawalBalance } from '~/server/utils/transaction-helpers'
 import { generateTransactionId } from '~/server/utils/uuid'
 import { useLogger } from '~/composables/useLogger'
 import type { Transaction, TransactionCreateForm, User as _User } from '~/types'
@@ -13,27 +13,8 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<TransactionCreateForm>(event)
     const { user_id, amount, transaction_type, memo, reason } = body
 
-    // Validation
-    if (!user_id || !amount || !transaction_type || !reason) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Required fields are missing'
-      })
-    }
-
-    if (!['deposit', 'withdrawal'].includes(transaction_type)) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Transaction type must be deposit or withdrawal'
-      })
-    }
-
-    if (amount <= 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Amount must be positive'
-      })
-    }
+    // 共通バリデーション関数を使用
+    validateAdminTransaction(body)
 
     const dynamodb = getDynamoDBService()
     const usersTableName = dynamodb.getTableName('users')
@@ -57,13 +38,7 @@ export default defineEventHandler(async (event) => {
 
     // For withdrawals, check if user has sufficient balance
     if (transaction_type === 'withdrawal') {
-      const balance = await calculateUserBalance(user_id)
-      if (balance < amount) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: `Insufficient balance. Current balance: ${balance} BTC`
-        })
-      }
+      await validateAdminWithdrawalBalance(user_id, amount, calculateUserBalance)
     }
 
     // Create transaction record

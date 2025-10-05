@@ -104,9 +104,6 @@
             <p class="text-2xl font-bold text-gray-900 font-mono">
               {{ formatBTC(dashboardData?.currentBalance || 0) }} BTC
             </p>
-            <p class="text-sm text-gray-500">
-              ¥{{ formatNumber(dashboardData?.currentValue || 0) }}
-            </p>
           </div>
           <!-- Request Button -->
           <div class="mt-4">

@@ -119,7 +119,7 @@
         </v-form>
 
         <v-alert
-          v-if="form.transaction_type === 'withdrawal' && selectedUserBalance !== null && form.amount > selectedUserBalance"
+          v-if="form.transaction_type === 'withdrawal' && selectedUserBalance !== null && Math.abs(form.amount) > selectedUserBalance"
           type="error"
           variant="tonal"
           class="mt-4"
@@ -222,7 +222,7 @@ const currencyOptions = [
 const isInvalidWithdrawal = computed(() => {
   return form.transaction_type === 'withdrawal' && 
          selectedUserBalance.value !== null && 
-         form.amount > selectedUserBalance.value
+         Math.abs(form.amount) > selectedUserBalance.value
 })
 
 // Validation rules
@@ -234,11 +234,11 @@ const typeRules = [
   (v: string) => !!v || '取引種別を選択してください'
 ]
 
-const amountRules = [
+const amountRules = computed(() => [
   (v: number) => !!v || '金額は必須です',
   (v: number) => v > 0 || '金額は正の数値で入力してください',
   (v: number) => v <= 1000 || '金額が大きすぎます（最大1000 BTC）'
-]
+])
 
 const jpyAmountRules = [
   (v: number) => !!v || '金額は必須です',
@@ -275,7 +275,13 @@ const createTransaction = async () => {
   loading.value = true
   
   try {
-    await apiClient.post('/admin/transactions', form)
+    // 出金の場合は負の値に変換して送信
+    const submitData = {
+      ...form,
+      amount: form.transaction_type === 'withdrawal' ? -Math.abs(form.amount) : form.amount
+    }
+    
+    await apiClient.post('/admin/transactions', submitData)
 
     showSuccess('取引を追加しました')
     resetForm()

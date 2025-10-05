@@ -164,8 +164,6 @@ async function handleBulkCreate(body: MarketRateBulkCreateForm, currentUser: Aut
       await dynamodb.put(ratesTableName, marketRate as unknown as Record<string, unknown>)
       createdRates.push(marketRate)
 
-      logger.info(`Created market rate for ${timestamp}: ¥${btc_jpy_rate}`)
-
     } catch (error) {
       logger.error(`Failed to create rate for ${rateData.timestamp}:`, error)
       errors.push(`Failed to create rate for ${rateData.timestamp}: ${error instanceof Error ? error.message : String(error)}`)
@@ -230,8 +228,6 @@ async function recalculateUserAssetValues(rateTimestamp: string, btcRate: number
 
         // Calculate JPY value
         const jpyValue = totalBtc * btcRate
-
-        logger.info(`ユーザー ${user.name}: ${totalBtc} BTC = ¥${jpyValue.toLocaleString()}`)
 
       } catch (userError) {
         logger.error(`ユーザー ${user.user_id} の再計算に失敗:`, userError)
