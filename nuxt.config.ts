@@ -101,6 +101,7 @@ export default defineNuxtConfig({
     dynamodbMarketRatesTable: process.env.NUXT_DYNAMODB_MARKET_RATES_TABLE || 'futura-dev-market-rates',
     dynamodbSessionsTable: process.env.NUXT_DYNAMODB_SESSIONS_TABLE || 'futura-dev-sessions',
     dynamodbPermissionsTable: process.env.NUXT_DYNAMODB_PERMISSIONS_TABLE || 'futura-dev-permissions',
+    dynamodbBatchOperationsTable: process.env.NUXT_DYNAMODB_BATCH_OPERATIONS_TABLE || 'futura-dev-batch-operations',
     s3UploadsBucket: process.env.NUXT_S3_UPLOADS_BUCKET || 'futura-dev-uploads',
     cognitoUserPoolId: process.env.NUXT_PUBLIC_COGNITO_USER_POOL_ID || '',
     cognitoClientId: process.env.NUXT_PUBLIC_COGNITO_CLIENT_ID || '',

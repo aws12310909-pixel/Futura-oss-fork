@@ -29,7 +29,7 @@ export interface Transaction {
   transaction_id: string
   user_id: string
   amount: number
-  transaction_type: 'deposit' | 'withdrawal'
+  transaction_type: 'deposit' | 'withdrawal' | 'asset_management'
   timestamp: string
   created_by: string
   memo: string
@@ -346,4 +346,48 @@ export interface AdminDashboardData {
   recentTransactionRequests: DashboardTransactionRequest[]
   pendingUsers: DashboardUser[]
   recentActivities: RecentActivity[]
+}
+
+// Batch operation types
+export const BATCH_OPERATION_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled'
+} as const
+
+export type BatchOperationStatus = typeof BATCH_OPERATION_STATUS[keyof typeof BATCH_OPERATION_STATUS]
+
+export interface BatchOperation {
+  batch_id: string
+  operation_type: 'btc_adjustment'
+  adjustment_rate: number  // 増減率（%） 例: 5.0 = +5%, -3.0 = -3%
+  target_user_count: number
+  processed_user_count: number
+  failed_user_count: number
+  status: BatchOperationStatus
+  created_by: string
+  created_at: string
+  started_at?: string
+  completed_at?: string
+  error_message?: string
+  memo?: string
+}
+
+export interface BatchOperationCreateForm {
+  adjustment_rate: number
+  memo?: string
+}
+
+export interface BatchOperationResult {
+  batch_id: string
+  status: BatchOperationStatus
+  target_user_count: number
+  processed_user_count: number
+  failed_user_count: number
+  errors?: Array<{
+    user_id: string
+    error: string
+  }>
 }

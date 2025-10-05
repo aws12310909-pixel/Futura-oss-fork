@@ -194,12 +194,6 @@ const adminNavItems = [
     value: 'admin-groups'
   },
   {
-    title: '相場価格設定',
-    icon: 'mdi:chart-line',
-    to: '/admin/rates',
-    value: 'admin-rates'
-  },
-  {
     title: '入出金管理',
     icon: 'mdi:bank-transfer',
     to: '/admin/transactions',
@@ -216,7 +210,19 @@ const adminNavItems = [
     icon: 'mdi:check-circle',
     to: '/admin/approvals',
     value: 'admin-approvals'
-  }
+  },
+  {
+    title: 'BTC一括調整',
+    icon: 'mdi:bitcoin',
+    to: '/admin/batch-operations',
+    value: 'admin-batch-operations'
+  },
+  {
+    title: '相場価格設定',
+    icon: 'mdi:chart-line',
+    to: '/admin/rates',
+    value: 'admin-rates'
+  },
 ]
 
 const userInitials = computed(() => {

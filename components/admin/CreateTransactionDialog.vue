@@ -84,20 +84,6 @@
                 />
               </div>
 
-              <!-- Exchange Rate Display -->
-              <div v-if="latestRate" class="bg-gray-50 p-4 rounded-lg border">
-                <div class="flex items-center justify-between text-sm">
-                  <span class="font-medium text-gray-700">現在の相場レート:</span>
-                  <span class="font-mono text-gray-900">1 BTC = {{ formatCurrency(latestRate.btc_jpy_rate) }} JPY</span>
-                </div>
-                <div class="flex items-center justify-between text-sm mt-2">
-                  <span class="font-medium text-gray-700">換算後金額:</span>
-                  <span class="font-mono text-blue-600">
-                    {{ selectedCurrency === 'JPY' ? `${form.amount.toFixed(8)} BTC` : `${jpyAmount.toLocaleString()} JPY` }}
-                  </span>
-                </div>
-              </div>
-
               <!-- Rate Loading/Error State -->
               <v-alert
                 v-if="rateError"
@@ -179,6 +165,7 @@
 
 <script setup lang="ts">
 import type { TransactionCreateForm, User, MarketRate } from '~/types'
+import { getTransactionTypeLabel } from '~/utils/transaction'
 
 const apiClient = useApiClient()
 
@@ -228,7 +215,7 @@ const transactionTypeOptions = [
 
 const currencyOptions = [
   { title: 'BTC', value: 'BTC' },
-  { title: 'JPY', value: 'JPY' }
+  // { title: 'JPY', value: 'JPY' }
 ]
 
 // Computed
@@ -279,8 +266,8 @@ const createTransaction = async () => {
   }
 
   const selectedUser = props.users.find(u => u.user_id === form.user_id)
-  const confirmMessage = `${selectedUser?.name}に${form.transaction_type === 'deposit' ? '入金' : '出金'}（${form.amount} BTC）を実行してもよろしいですか？`
-  
+  const confirmMessage = `${selectedUser?.name}に${getTransactionTypeLabel(form.transaction_type)}（${form.amount} BTC）を実行してもよろしいですか？`
+
   if (!confirm(confirmMessage)) {
     return
   }
@@ -320,7 +307,7 @@ const loadLatestRate = async () => {
     const apiClient = useApiClient()
     const response = await apiClient.get<{ success: boolean; data: MarketRate }>('/market-rates/latest')
     if (response.success && response.data) {
-      latestRate.value = response.data
+      latestRate.value = response.data.data
     } else {
       throw new Error('No market rate data available')
     }
@@ -374,7 +361,7 @@ const onUserChange = async (userId: string) => {
   try {
     const apiClient = useApiClient()
     const { data } = await apiClient.get<{ success: boolean; data: { btc_balance: number } }>(`/admin/users/${userId}/balance`)
-    selectedUserBalance.value = data.btc_balance
+    selectedUserBalance.value = data?.data?.btc_balance || 0
   } catch (error) {
     logger.error('ユーザー残高の取得に失敗しました:', error)
     selectedUserBalance.value = null

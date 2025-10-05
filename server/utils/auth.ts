@@ -130,11 +130,12 @@ export const requireAuth = async (event: H3Event): Promise<AuthUser> => {
 
 export const requirePermission = async (event: H3Event, permission: string): Promise<AuthUser> => {
   const user = await requireAuth(event)
-  
+
   if (!user.permissions.includes(permission)) {
+    logger.warn(`権限不足: ユーザー ${user.email} には権限 "${permission}" がありません。現在の権限: [${user.permissions.join(', ')}]`)
     throw createError({
       statusCode: 403,
-      statusMessage: 'Insufficient permissions'
+      statusMessage: `Insufficient permissions. Required: ${permission}`
     })
   }
 

@@ -23,9 +23,15 @@ export function filterApprovedTransactions(transactions: Transaction[]): Transac
  */
 export function calculateBalance(transactions: Transaction[]): number {
   return filterApprovedTransactions(transactions).reduce((balance, transaction) => {
-    return transaction.transaction_type === 'deposit' 
-      ? balance + transaction.amount 
-      : balance - transaction.amount
+    if (transaction.transaction_type === 'deposit') {
+      return balance + transaction.amount
+    } else if (transaction.transaction_type === 'withdrawal') {
+      return balance - transaction.amount
+    } else if (transaction.transaction_type === 'asset_management') {
+      // 資産運用: amountが正負の値を持つのでそのまま加算
+      return balance + transaction.amount
+    }
+    return balance
   }, 0)
 }
 

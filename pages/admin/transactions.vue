@@ -125,11 +125,11 @@
               variant="flat"
               class="justify-start"
             >
-              <Icon 
-                :name="item.transaction_type === 'deposit' ? 'mdi:plus' : 'mdi:minus'" 
-                class="mr-1.5 w-3.5 h-3.5" 
+              <Icon
+                :name="getTransactionTypeIcon(item.transaction_type)"
+                class="mr-1.5 w-3.5 h-3.5"
               />
-              {{ item.transaction_type === 'deposit' ? '入金' : '出金' }}
+              {{ getTransactionTypeLabel(item.transaction_type) }}
             </v-chip>
             <v-chip
               :color="getStatusColor(item.status)"
@@ -147,11 +147,11 @@
         </template>
 
         <template #[`item.amount`]="{ item }">
-          <span 
+          <span
             class="font-mono font-semibold"
-            :class="item.transaction_type === 'deposit' ? 'text-green-600' : 'text-red-600'"
+            :class="getTransactionTypeTextColor(item.transaction_type)"
           >
-            {{ item.transaction_type === 'deposit' ? '+' : '-' }}{{ item.amount }} BTC
+            {{ getTransactionTypeSign(item.transaction_type, item.amount) }}{{ Math.abs(item.amount) }} BTC
           </span>
         </template>
 
@@ -202,6 +202,14 @@
 
 <script setup lang="ts">
 import type { Transaction, User } from '~/types'
+import { 
+  getTransactionTypeLabel, 
+  getTransactionTypeColor as getTransactionTypeColorUtil,
+  getTransactionTypeIcon,
+  getTransactionTypeTextColor,
+  getTransactionTypeSign,
+  getTransactionTypeVuetifyColor
+} from '~/utils/transaction'
 
 definePageMeta({
   middleware: 'auth',
@@ -232,7 +240,8 @@ const selectedTransaction = ref<Transaction | null>(null)
 const transactionTypeOptions = [
   { title: 'すべて', value: 'all' },
   { title: '入金', value: 'deposit' },
-  { title: '出金', value: 'withdrawal' }
+  { title: '出金', value: 'withdrawal' },
+  { title: '資産運用', value: 'asset_management' }
 ]
 
 const statusOptions = [
@@ -391,12 +400,12 @@ const formatDate = (dateString: string) => {
 
 const getTransactionTypeColor = (transaction: Transaction) => {
   if (transaction.status === 'pending') {
-    return transaction.transaction_type === 'deposit' ? 'orange' : 'deep-orange'
+    return getTransactionTypeVuetifyColor(transaction.transaction_type)
   }
   if (transaction.status === 'rejected') {
     return 'grey'
   }
-  return transaction.transaction_type === 'deposit' ? 'success' : 'error'
+  return getTransactionTypeColorUtil(transaction.transaction_type)
 }
 
 const getStatusColor = (status?: string) => {

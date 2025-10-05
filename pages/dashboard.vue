@@ -21,7 +21,7 @@
       <v-card class="card-shadow">
         <v-card-title class="px-6 py-4 border-b">
           <div class="flex items-center justify-between w-full">
-            <h3 class="text-lg font-semibold text-gray-900">資産推移（30日間）</h3>
+            <h3 class="text-lg font-semibold text-gray-900">BTC保有量推移（30日間）</h3>
             <div class="flex items-center space-x-2">
               <v-btn-toggle
                 v-model="assetViewMode"
@@ -46,27 +46,27 @@
             <!-- Summary Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
               <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">30日間収益</p>
+                <p class="text-xs text-gray-500 uppercase tracking-wider">30日間変動</p>
                 <p class="text-lg font-bold" :class="period30ChangeClass">
                   {{ period30ChangeText }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">最高値</p>
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最大保有量</p>
                 <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(maxValue) }}
+                  {{ formatBTC(maxBTCBalance) }} BTC
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">最安値</p>
+                <p class="text-xs text-gray-500 uppercase tracking-wider">最小保有量</p>
                 <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(minValue) }}
+                  {{ formatBTC(minBTCBalance) }} BTC
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-xs text-gray-500 uppercase tracking-wider">平均値</p>
+                <p class="text-xs text-gray-500 uppercase tracking-wider">平均保有量</p>
                 <p class="text-lg font-bold text-gray-900">
-                  ¥{{ formatNumber(avgValue) }}
+                  {{ formatBTC(avgBTCBalance) }} BTC
                 </p>
               </div>
             </div>
@@ -83,8 +83,8 @@
           <div v-else class="h-80 flex items-center justify-center bg-gray-50 rounded-lg">
             <div class="text-center">
               <Icon name="mdi:chart-line" class="text-4xl text-gray-400 mb-2" />
-              <p class="text-gray-500">資産データがありません</p>
-              <p class="text-sm text-gray-400 mt-2">取引を開始すると資産推移が表示されます</p>
+              <p class="text-gray-500">BTC残高データがありません</p>
+              <p class="text-sm text-gray-400 mt-2">取引を開始するとBTC保有量推移が表示されます</p>
             </div>
           </div>
         </v-card-text>
@@ -117,40 +117,6 @@
             >
               入出金リクエスト
             </NuxtLink>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <!-- Asset Value Card -->
-      <v-card class="card-shadow">
-        <v-card-text class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-medium text-gray-600">資産価値</h3>
-            <Icon name="mdi:chart-line" class="text-2xl text-green-500" />
-          </div>
-          <div class="space-y-1">
-            <p class="text-2xl font-bold text-gray-900">
-              ¥{{ formatNumber(dashboardData?.currentValue || 0) }}
-            </p>
-            <p class="text-sm" :class="valueChangeClass">
-              {{ valueChangeText }}
-            </p>
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <!-- Current Rate Card -->
-      <v-card class="card-shadow">
-        <v-card-text class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-medium text-gray-600">現在レート</h3>
-            <Icon name="mdi:currency-jpy" class="text-2xl text-blue-500" />
-          </div>
-          <div class="space-y-1">
-            <p class="text-2xl font-bold text-gray-900">
-              ¥{{ formatNumber(currentRate) }}
-            </p>
-            <p class="text-sm text-gray-500">1 BTC</p>
           </div>
         </v-card-text>
       </v-card>
@@ -188,15 +154,15 @@
             >
               <div class="flex items-center space-x-3">
                 <v-chip
-                  :color="transaction.transaction_type === 'deposit' ? 'success' : 'error'"
+                  :color="getTransactionTypeColor(transaction.transaction_type)"
                   size="small"
                   variant="flat"
                 >
-                  <Icon 
-                    :name="transaction.transaction_type === 'deposit' ? 'mdi:plus' : 'mdi:minus'" 
-                    class="mr-1" 
+                  <Icon
+                    :name="getTransactionTypeIcon(transaction.transaction_type)"
+                    class="mr-1"
                   />
-                  {{ transaction.transaction_type === 'deposit' ? '入金' : '出金' }}
+                  {{ getTransactionTypeLabel(transaction.transaction_type) }}
                 </v-chip>
                 <div>
                   <p class="text-sm font-medium">{{ transaction.memo }}</p>
@@ -204,11 +170,11 @@
                 </div>
               </div>
               <div class="text-right">
-                <p 
+                <p
                   class="font-mono font-semibold"
-                  :class="transaction.transaction_type === 'deposit' ? 'text-green-600' : 'text-red-600'"
+                  :class="getTransactionTypeTextColor(transaction.transaction_type)"
                 >
-                  {{ transaction.transaction_type === 'deposit' ? '+' : '-' }}{{ formatBTC(transaction.amount) }} BTC
+                  {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{ formatBTC(Math.abs(transaction.amount)) }} BTC
                 </p>
               </div>
             </div>
@@ -227,6 +193,13 @@
 
 <script setup lang="ts">
 import type { DashboardData, MarketRate } from '~/types'
+import { 
+  getTransactionTypeLabel, 
+  getTransactionTypeColor, 
+  getTransactionTypeIcon, 
+  getTransactionTypeTextColor, 
+  getTransactionTypeSign 
+} from '~/utils/transaction'
 
 const logger = useLogger({ prefix: '[PAGE-DASHBOARD]' })
 
@@ -260,8 +233,8 @@ const valueChangeText = computed(() => {
   }
   
   const history = dashboardData.value.balanceHistory
-  const current = history[history.length - 1].jpy_value
-  const previous = history[history.length - 2].jpy_value
+  const current = history[history.length - 1].btc_amount
+  const previous = history[history.length - 2].btc_amount
   
   if (previous === 0) return '+0.00%'
   
@@ -296,8 +269,8 @@ const period30ChangeText = computed(() => {
   }
   
   const history = dashboardData.value.balanceHistory
-  const current = history[history.length - 1].jpy_value
-  const initial = history[0].jpy_value
+  const current = history[history.length - 1].btc_amount
+  const initial = history[0].btc_amount
   
   if (initial === 0) return '+0.00%'
   
@@ -313,20 +286,20 @@ const period30ChangeClass = computed(() => {
   return 'text-gray-600'
 })
 
-const maxValue = computed(() => {
+const maxBTCBalance = computed(() => {
   if (!dashboardData.value?.balanceHistory.length) return 0
-  return Math.max(...dashboardData.value.balanceHistory.map(item => item.jpy_value))
+  return Math.max(...dashboardData.value.balanceHistory.map(item => item.btc_amount))
 })
 
-const minValue = computed(() => {
+const minBTCBalance = computed(() => {
   if (!dashboardData.value?.balanceHistory.length) return 0
-  return Math.min(...dashboardData.value.balanceHistory.map(item => item.jpy_value))
+  return Math.min(...dashboardData.value.balanceHistory.map(item => item.btc_amount))
 })
 
-const avgValue = computed(() => {
+const avgBTCBalance = computed(() => {
   if (!dashboardData.value?.balanceHistory.length) return 0
-  const sum = dashboardData.value.balanceHistory.reduce((acc, item) => acc + item.jpy_value, 0)
-  return Math.round(sum / dashboardData.value.balanceHistory.length)
+  const sum = dashboardData.value.balanceHistory.reduce((acc, item) => acc + item.btc_amount, 0)
+  return sum / dashboardData.value.balanceHistory.length
 })
 
 // Market rate statistics
