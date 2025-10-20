@@ -147,8 +147,9 @@ const transactionTypeOptions = [
 ]
 
 const depositReasonOptions = [
-  '投資目的',
-  '資産運用', 
+  '運用開始',
+  '追加入金',
+  '証拠金不足',
   'その他'
 ]
 
@@ -156,6 +157,7 @@ const withdrawalReasonOptions = [
   '利益確定',
   '損失限定',
   '必要経費',
+  '満期',
   'その他'
 ]
 

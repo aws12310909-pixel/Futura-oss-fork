@@ -94,12 +94,6 @@
             <h3 class="text-lg font-medium text-gray-900 mb-4">アカウント情報</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="text-sm font-medium text-gray-600">BTCアドレス</label>
-                <code class="block mt-1 text-xs bg-gray-100 p-2 rounded font-mono">
-                  {{ user.btc_address }}
-                </code>
-              </div>
-              <div>
                 <label class="text-sm font-medium text-gray-600">ユーザーID</label>
                 <code class="block mt-1 text-xs bg-gray-100 p-2 rounded font-mono">
                   {{ user.user_id }}

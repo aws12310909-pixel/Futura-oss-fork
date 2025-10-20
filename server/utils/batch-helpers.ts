@@ -275,8 +275,8 @@ export async function createBatchTransactions(
         transaction_type: 'asset_management',
         timestamp: now,
         created_by: createdBy,
-        memo: memo || `資産運用`,
-        reason: `asset_manage_id: ${batchId}`
+        reason: '資産運用',
+        memo: `asset_manage_id: ${batchId}${memo ? ` | ${memo}` : ''}`
       }
 
       transactions.push(transaction)

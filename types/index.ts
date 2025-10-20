@@ -125,6 +125,10 @@ export interface ChangePasswordRequest {
 export interface DashboardData {
   currentBalance: number
   currentValue: number
+  depositPrincipal: number      // 入金元本（承認済み入金の合計）
+  withdrawalTotal: number       // 出金額（承認済み出金の合計、絶対値）
+  creditBonus: number           // クレジットボーナス（承認済み、reason='クレジットボーナス'）
+  netProfit: number             // 純利益（現在残高 - 入金元本 + 出金額）
   balanceHistory: BalanceHistoryItem[]
   recentTransactions: Transaction[]
 }

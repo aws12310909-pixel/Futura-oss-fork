@@ -98,16 +98,20 @@
         <v-card-text class="p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-medium text-gray-600">現在の残高</h3>
-            <Icon name="mdi:bitcoin" class="text-2xl text-primary-500" />
           </div>
           <div class="space-y-1">
             <p class="text-2xl font-bold text-gray-900 font-mono">
-              {{ formatBTC(dashboardData?.currentBalance || 0) }} BTC
+              <Icon name="mdi:currency-jpy" class="text-xl text-gray-500 mr-1 align-middle" />
+              {{ formatNumber(dashboardData?.currentValue || 0) }}
+            </p>
+            <p class="text-xl text-gray-900 font-mono">
+              <Icon name="mdi:bitcoin" class="text-xl text-gray-500 mr-1 align-middle" />
+              {{ formatBTC(dashboardData?.currentBalance || 0) }}
             </p>
           </div>
           <!-- Request Button -->
           <div class="mt-4">
-            <NuxtLink 
+            <NuxtLink
               to="/transaction-requests"
               class="block w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-center"
               :class="{ 'bg-gray-400 cursor-not-allowed': hasPermission('transaction:request') === false }"
@@ -128,6 +132,73 @@
           <div class="space-y-1">
             <p class="text-2xl font-bold text-gray-900">{{ monthlyTransactionCount }}</p>
             <p class="text-sm text-gray-500">件</p>
+          </div>
+        </v-card-text>
+      </v-card>
+    </div>
+
+    <!-- Statistics Cards - 2x2 Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Deposit Principal Card -->
+      <v-card class="card-shadow">
+        <v-card-text class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600">入金元本</h3>
+            <Icon name="mdi:bank-transfer-in" class="text-2xl text-blue-500" />
+          </div>
+          <div class="space-y-1">
+            <p class="text-2xl font-bold text-blue-700 font-mono">
+              {{ formatBTC(dashboardData?.depositPrincipal || 0) }} BTC
+            </p>
+            <p class="text-sm text-gray-500">承認済み入金の合計</p>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Withdrawal Total Card -->
+      <v-card class="card-shadow">
+        <v-card-text class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600">出金額</h3>
+            <Icon name="mdi:bank-transfer-out" class="text-2xl text-orange-500" />
+          </div>
+          <div class="space-y-1">
+            <p class="text-2xl font-bold text-orange-700 font-mono">
+              {{ formatBTC(dashboardData?.withdrawalTotal || 0) }} BTC
+            </p>
+            <p class="text-sm text-gray-500">承認済み出金の合計</p>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Credit Bonus Card -->
+      <v-card class="card-shadow">
+        <v-card-text class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600">クレジットボーナス</h3>
+            <Icon name="mdi:gift" class="text-2xl text-purple-500" />
+          </div>
+          <div class="space-y-1">
+            <p class="text-2xl font-bold text-purple-700 font-mono">
+              {{ formatBTC(dashboardData?.creditBonus || 0) }} BTC
+            </p>
+            <p class="text-sm text-gray-500">ボーナスの合計</p>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Net Profit Card -->
+      <v-card class="card-shadow">
+        <v-card-text class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600">純利益</h3>
+            <Icon name="mdi:chart-line" class="text-2xl" :class="netProfitIconClass" />
+          </div>
+          <div class="space-y-1">
+            <p class="text-2xl font-bold font-mono" :class="netProfitClass">
+              {{ formatBTC(dashboardData?.netProfit || 0) }} BTC
+            </p>
+            <p class="text-sm text-gray-500">残高 - 元本 + 出金額</p>
           </div>
         </v-card-text>
       </v-card>
@@ -162,7 +233,8 @@
                   {{ getTransactionTypeLabel(transaction.transaction_type) }}
                 </v-chip>
                 <div>
-                  <p class="text-sm font-medium">{{ transaction.memo }}</p>
+                  <p class="text-sm font-medium">{{ transaction.reason }}</p>
+                  <p class="text-xs text-gray-500">{{ transaction.memo }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(transaction.timestamp) }}</p>
                 </div>
               </div>
@@ -335,6 +407,21 @@ const avgRate = computed(() => {
   if (!marketRates.value.length) return 0
   const sum = marketRates.value.reduce((acc, rate) => acc + rate.btc_jpy_rate, 0)
   return Math.round(sum / marketRates.value.length)
+})
+
+// Net profit styling
+const netProfitClass = computed(() => {
+  const netProfit = dashboardData.value?.netProfit || 0
+  if (netProfit > 0) return 'text-green-600'
+  if (netProfit < 0) return 'text-red-600'
+  return 'text-gray-900'
+})
+
+const netProfitIconClass = computed(() => {
+  const netProfit = dashboardData.value?.netProfit || 0
+  if (netProfit > 0) return 'text-green-600'
+  if (netProfit < 0) return 'text-red-600'
+  return 'text-gray-500'
 })
 
 // Methods

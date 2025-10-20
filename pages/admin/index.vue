@@ -296,7 +296,7 @@ const managementItems = [
   },
   {
     title: '入出金管理',
-    description: '全ユーザーの入出金記録管理',
+    description: '全ユーザーの取引結果管理',
     icon: 'mdi:bank-transfer',
     to: '/admin/transactions',
     bgColor: 'bg-orange-100',

@@ -1,7 +1,7 @@
 <template>
   <div class="p-6">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">入出金記録</h1>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">取引結果</h1>
       <p class="text-gray-600">あなたの取引履歴を確認できます</p>
     </div>
 
@@ -123,18 +123,17 @@
               />
               {{ getTransactionTypeLabel(item.transaction_type) }}
             </v-chip>
-            <v-chip
-              :color="getStatusColor(item.status)"
-              size="small"
-              variant="outlined"
-              class="justify-start"
-            >
-              <Icon 
-                :name="getStatusIcon(item.status)" 
-                class="mr-1.5 w-3.5 h-3.5" 
-              />
-              {{ getStatusText(item.status) }}
-            </v-chip>
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <Icon
+                  v-bind="props"
+                  :name="getStatusIcon(item.status)"
+                  :class="getStatusIconClass(item.status)"
+                  class="w-5 h-5 cursor-help"
+                />
+              </template>
+              <span>{{ getStatusText(item.status) }}</span>
+            </v-tooltip>
           </div>
         </template>
 
@@ -153,8 +152,8 @@
 
         <template #[`item.memo`]="{ item }">
           <div class="max-w-xs">
-            <p class="text-sm font-medium">{{ item.memo }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ item.reason }}</p>
+            <p class="text-sm font-medium">{{ item.reason }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ item.memo }}</p>
           </div>
         </template>
 
@@ -203,7 +202,7 @@ definePageMeta({
 })
 
 useHead({
-  title: '入出金記録 - M・S CFD App'
+  title: '取引結果 - M・S CFD App'
 })
 
 const { user } = useAuth()
@@ -238,7 +237,7 @@ const headers = [
   { title: '日時', key: 'timestamp', sortable: true },
   { title: '種別/状態', key: 'transaction_type', sortable: true },
   { title: '金額', key: 'amount', sortable: true },
-  { title: 'メモ/理由', key: 'memo', sortable: false },
+  { title: '理由/メモ', key: 'memo', sortable: false },
   { title: '残高', key: 'running_balance', sortable: false },
   { title: '詳細', key: 'actions', sortable: false, width: 80 }
 ]
@@ -441,6 +440,20 @@ const getStatusText = (status?: string) => {
       return '拒否済み'
     default:
       return '不明'
+  }
+}
+
+const getStatusIconClass = (status?: string) => {
+  const statusValue = status || 'approved'
+  switch (statusValue) {
+    case 'approved':
+      return 'text-green-600'
+    case 'pending':
+      return 'text-orange-500'
+    case 'rejected':
+      return 'text-red-600'
+    default:
+      return 'text-gray-500'
   }
 }
 
