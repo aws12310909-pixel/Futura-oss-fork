@@ -161,14 +161,6 @@
                 </v-chip>
               </div>
 
-              <!-- BTC Address -->
-              <div>
-                <label class="text-sm font-medium text-gray-600">BTCアドレス</label>
-                <code class="block mt-1 text-xs bg-gray-100 p-2 rounded font-mono break-all">
-                  {{ profile?.btc_address }}
-                </code>
-              </div>
-
               <!-- Account Status -->
               <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">アカウント状態</span>

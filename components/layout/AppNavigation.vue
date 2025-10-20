@@ -161,7 +161,7 @@ const userNavItems = [
     value: 'transaction-requests'
   },
   {
-    title: '入出金記録',
+    title: '取引結果',
     icon: 'mdi:swap-horizontal',
     to: '/transactions',
     value: 'transactions'

@@ -113,7 +113,7 @@ export default defineNuxtConfig({
   },
 
   // Server-side rendering
-  ssr: true,
+  ssr: false,
 
   // App configuration
   app: {

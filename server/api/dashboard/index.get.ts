@@ -1,5 +1,12 @@
 import { getDynamoDBService } from '~/server/utils/dynamodb'
-import { calculateBalance, calculateBalanceAtDate } from '~/server/utils/transaction-helpers'
+import {
+  calculateBalance,
+  calculateBalanceAtDate,
+  calculateDepositPrincipal,
+  calculateWithdrawalTotal,
+  calculateCreditBonus,
+  calculateNetProfit
+} from '~/server/utils/transaction-helpers'
 import { useLogger } from '~/composables/useLogger'
 import type { Transaction, MarketRate, DashboardData, BalanceHistoryItem } from '~/types'
 
@@ -28,6 +35,12 @@ export default defineEventHandler(async (event) => {
     // Calculate current BTC balance (承認済み取引のみ対象)
     const currentBalance = calculateBalance(transactions)
 
+    // Calculate dashboard statistics (承認済み取引のみ対象)
+    const depositPrincipal = calculateDepositPrincipal(transactions)
+    const withdrawalTotal = calculateWithdrawalTotal(transactions)
+    const creditBonus = calculateCreditBonus(transactions)
+    const netProfit = calculateNetProfit(currentBalance, depositPrincipal, withdrawalTotal)
+
     // Get market rates
     const ratesResult = await dynamodb.scan(ratesTableName)
     const rates = (ratesResult.items as MarketRate[])
@@ -46,6 +59,10 @@ export default defineEventHandler(async (event) => {
     const dashboardData: DashboardData = {
       currentBalance,
       currentValue,
+      depositPrincipal,
+      withdrawalTotal,
+      creditBonus,
+      netProfit,
       balanceHistory,
       recentTransactions
     }

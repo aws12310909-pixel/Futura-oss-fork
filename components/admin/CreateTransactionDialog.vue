@@ -96,13 +96,12 @@
               </v-alert>
             </div>
 
-            <v-text-field
+            <v-select
               v-model="form.reason"
-              label="操作理由 *"
+              :items="reasonOptions"
+              :label="`${form.transaction_type === 'deposit' ? '入金' : '出金'}理由 *`"
               variant="outlined"
               :rules="reasonRules"
-              hint="この取引を行う理由を入力してください"
-              persistent-hint
               required
             />
 
@@ -218,10 +217,31 @@ const currencyOptions = [
   // { title: 'JPY', value: 'JPY' }
 ]
 
+const depositReasonOptions = [
+  '運用開始',
+  '追加入金',
+  '証拠金不足',
+  'クレジットボーナス',
+  'その他'
+]
+
+const withdrawalReasonOptions = [
+  'テスト出勤',
+  '利益確定',
+  '損失限定',
+  '必要経費',
+  '満期',
+  'その他'
+]
+
 // Computed
+const reasonOptions = computed(() => {
+  return form.transaction_type === 'deposit' ? depositReasonOptions : withdrawalReasonOptions
+})
+
 const isInvalidWithdrawal = computed(() => {
-  return form.transaction_type === 'withdrawal' && 
-         selectedUserBalance.value !== null && 
+  return form.transaction_type === 'withdrawal' &&
+         selectedUserBalance.value !== null &&
          Math.abs(form.amount) > selectedUserBalance.value
 })
 
@@ -247,8 +267,7 @@ const jpyAmountRules = [
 ]
 
 const reasonRules = [
-  (v: string) => !!v || '操作理由は必須です',
-  (v: string) => v.length >= 3 || '操作理由は3文字以上で入力してください'
+  (v: string) => !!v || '理由を選択してください'
 ]
 
 const memoRules = [
@@ -366,8 +385,9 @@ const onUserChange = async (userId: string) => {
 
   try {
     const apiClient = useApiClient()
-    const { data } = await apiClient.get<{ success: boolean; data: { btc_balance: number } }>(`/admin/users/${userId}/balance`)
-    selectedUserBalance.value = data?.data?.btc_balance || 0
+    const { data } = await apiClient.get<{ success: boolean, btc_balance: number }>(`/admin/users/${userId}/balance`)
+    console.log('data', data)
+    selectedUserBalance.value = data?.btc_balance || 0
   } catch (error) {
     logger.error('ユーザー残高の取得に失敗しました:', error)
     selectedUserBalance.value = null
@@ -393,5 +413,10 @@ watch(selectedCurrency, (newCurrency) => {
     // JPYからBTCモードに変更
     convertJpyToBtc()
   }
+})
+
+// 取引種別が変更された時に理由をリセット
+watch(() => form.transaction_type, () => {
+  form.reason = ''
 })
 </script>

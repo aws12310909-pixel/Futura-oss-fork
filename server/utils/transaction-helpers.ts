@@ -76,13 +76,62 @@ export async function getTotalBalance(userId: string): Promise<number> {
     )
 
     const transactions = result.items as Transaction[]
-    
+
     // 承認済み取引のみを対象とする（statusが未設定の場合は承認済みとして扱う）
     return calculateBalance(transactions)
   } catch (error: unknown) {
     console.error('[TransactionHelpers-Balance] 残高計算に失敗:', error)
     return 0
   }
+}
+
+// ============================================================================
+// ダッシュボード統計計算関数群
+// ============================================================================
+
+/**
+ * 入金元本を計算
+ * 承認済み入金取引のみを対象とする
+ */
+export function calculateDepositPrincipal(transactions: Transaction[]): number {
+  return filterApprovedTransactions(transactions)
+    .filter(t => t.transaction_type === 'deposit')
+    .reduce((sum, t) => sum + t.amount, 0)
+}
+
+/**
+ * 出金額を計算（絶対値で返す）
+ * 承認済み出金取引のみを対象とする
+ */
+export function calculateWithdrawalTotal(transactions: Transaction[]): number {
+  return Math.abs(
+    filterApprovedTransactions(transactions)
+      .filter(t => t.transaction_type === 'withdrawal')
+      .reduce((sum, t) => sum + t.amount, 0)
+  )
+}
+
+/**
+ * クレジットボーナスを計算
+ * 承認済み入金取引でreasonが「クレジットボーナス」のもののみを対象とする
+ */
+export function calculateCreditBonus(transactions: Transaction[]): number {
+  return filterApprovedTransactions(transactions)
+    .filter(t => t.transaction_type === 'deposit' && t.reason === 'クレジットボーナス')
+    .reduce((sum, t) => sum + t.amount, 0)
+}
+
+/**
+ * 純利益を計算
+ * 純利益 = 現在残高 - 入金元本 + 出金額
+ * 資産運用による増減も含まれる（現在残高に含まれているため）
+ */
+export function calculateNetProfit(
+  currentBalance: number,
+  depositPrincipal: number,
+  withdrawalTotal: number
+): number {
+  return currentBalance - depositPrincipal + withdrawalTotal
 }
 
 // ============================================================================
