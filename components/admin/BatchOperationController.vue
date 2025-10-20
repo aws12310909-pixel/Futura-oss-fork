@@ -138,6 +138,8 @@ const emit = defineEmits<{
   success: []
 }>()
 
+const apiClient = useApiClient()
+
 // State
 const adjustmentRate = ref<number>(0)
 const memo = ref<string>('')
@@ -179,12 +181,9 @@ async function executeBatchOperation() {
       memo: memo.value || undefined
     }
 
-    const response = await $fetch<{ success: boolean; data: BatchOperationResult; message: string }>(
+    const response = await apiClient.post<BatchOperationResult>(
       '/api/admin/batch-operations',
-      {
-        method: 'POST',
-        body: payload
-      }
+      payload
     )
 
     if (response.success) {
@@ -194,7 +193,7 @@ async function executeBatchOperation() {
       emit('success')
 
       // Show success message
-      const result = response.data
+      const result = response.data! as BatchOperationResult
       const successMsg = `一括処理が完了しました。成功: ${result.processed_user_count}件, 失敗: ${result.failed_user_count}件`
       console.log(successMsg)
     }

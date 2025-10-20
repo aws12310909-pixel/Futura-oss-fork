@@ -193,6 +193,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
+const apiClient = useApiClient()
+
 // State
 const operation = ref<BatchOperation | null>(null)
 const transactions = ref<Transaction[]>([])
@@ -211,12 +213,11 @@ async function fetchDetail() {
   loading.value = true
 
   try {
-    const response = await $fetch<{
-      success: boolean
-      data: { operation: BatchOperation; transactions: Transaction[] }
-    }>(`/api/admin/batch-operations/${props.batchId}`)
+    const response = await apiClient.get<{ operation: BatchOperation; transactions: Transaction[] }>(
+      `/api/admin/batch-operations/${props.batchId}`
+    )
 
-    if (response.success) {
+    if (response.success && response.data) {
       operation.value = response.data.operation
       transactions.value = response.data.transactions
     }

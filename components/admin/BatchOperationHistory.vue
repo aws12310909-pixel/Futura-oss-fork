@@ -114,6 +114,8 @@ const emit = defineEmits<{
   viewDetail: [batchId: string]
 }>()
 
+const apiClient = useApiClient()
+
 // State
 const operations = ref<BatchOperation[]>([])
 const loading = ref(false)
@@ -137,12 +139,12 @@ async function fetchOperations() {
       params.status = statusFilter.value
     }
 
-    const response = await $fetch<{ success: boolean; data: PaginatedResponse<BatchOperation> }>(
+    const response = await apiClient.get<PaginatedResponse<BatchOperation>>(
       '/api/admin/batch-operations',
       { params }
     )
 
-    if (response.success) {
+    if (response.success && response.data) {
       operations.value = response.data.items
       total.value = response.data.total
     }
