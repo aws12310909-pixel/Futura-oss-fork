@@ -182,7 +182,7 @@ async function executeBatchOperation() {
     }
 
     const response = await apiClient.post<BatchOperationResult>(
-      '/api/admin/batch-operations',
+      '/admin/batch-operations',
       payload
     )
 

@@ -214,7 +214,7 @@ async function fetchDetail() {
 
   try {
     const response = await apiClient.get<{ operation: BatchOperation; transactions: Transaction[] }>(
-      `/api/admin/batch-operations/${props.batchId}`
+      `/admin/batch-operations/${props.batchId}`
     )
 
     if (response.success && response.data) {

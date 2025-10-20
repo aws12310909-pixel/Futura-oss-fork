@@ -140,7 +140,7 @@ async function fetchOperations() {
     }
 
     const response = await apiClient.get<PaginatedResponse<BatchOperation>>(
-      '/api/admin/batch-operations',
+      '/admin/batch-operations',
       { params }
     )
 
