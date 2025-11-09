@@ -109,7 +109,8 @@ export default defineNuxtConfig({
     
     // Public keys (exposed to the client-side)
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || '/api'
+      apiBaseUrl: process.env.API_BASE_URL || '/api',
+      imageBaseUrl: process.env.NUXT_IMAGE_BASE_URL || '' // クライアント側でも画像URLにアクセス可能にする
     }
   },
 

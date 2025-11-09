@@ -12,7 +12,7 @@
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex items-center space-x-3">
-        <Icon name="mdi:bitcoin" class="text-2xl text-primary-500 flex-shrink-0" />
+        <CommonAppLogo size="lg" :centered="false" />
         <div v-show="!rail || isMobile" class="min-w-0">
           <h2 class="text-sm font-semibold text-gray-900 truncate">M・S CFD App</h2>
           <p class="text-xs text-gray-500 truncate">{{ user?.name }}</p>
