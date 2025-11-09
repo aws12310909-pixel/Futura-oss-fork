@@ -7,6 +7,9 @@ version: 0.2
 #   - AWS_REGION: AWSリージョン (例: ap-northeast-1)
 #   - PROJECT_NAME: プロジェクト名 (例: futura)
 #   - TF_STATE_BUCKET: Terraform Stateバケット名 (事前作成必須)
+#
+# オプションの環境変数:
+#   - UPLOADS_BUCKET_NAME: S3アップロードバケット名のカスタマイズ (グローバルにユニークな名前が必要)
 
 env:
   variables:
@@ -87,6 +90,13 @@ phases:
         environment  = "$ENVIRONMENT"
         project_name = "$PROJECT_NAME"
         EOF
+
+        # オプション: UPLOADS_BUCKET_NAME環境変数が設定されている場合のみ追加
+        if [ -n "$UPLOADS_BUCKET_NAME" ]; then
+          echo "uploads_bucket_name = \"$UPLOADS_BUCKET_NAME\"" >> terraform.tfvars
+          echo "✅ Custom S3 bucket name: $UPLOADS_BUCKET_NAME"
+        fi
+
         cat terraform.tfvars
 
   build:

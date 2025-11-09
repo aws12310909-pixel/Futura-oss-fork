@@ -20,3 +20,9 @@ variable "project_name" {
   type        = string
   default     = "futura"
 }
+
+variable "uploads_bucket_name" {
+  description = "S3 bucket name for uploads (optional, defaults to project-environment-uploads). Must be globally unique."
+  type        = string
+  default     = ""
+}

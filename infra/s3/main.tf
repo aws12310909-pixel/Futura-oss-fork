@@ -1,9 +1,10 @@
 # S3 bucket for file uploads (private)
+# Bucket name can be overridden via uploads_bucket_name variable to ensure global uniqueness
 resource "aws_s3_bucket" "uploads" {
-  bucket = "${var.project_name}-${var.environment}-uploads"
+  bucket = var.uploads_bucket_name != "" ? var.uploads_bucket_name : "${var.project_name}-${var.environment}-uploads"
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-uploads"
+    Name = var.uploads_bucket_name != "" ? var.uploads_bucket_name : "${var.project_name}-${var.environment}-uploads"
   }
 }
 
