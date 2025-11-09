@@ -28,7 +28,9 @@ async function checkAndSyncIfNeeded(groups: string[], email: string): Promise<vo
 
     // ユーザーテーブルの件数をチェック
     logger.info('ユーザーテーブルのレコード数をチェック中...')
-    const usersScanResult = await dynamoDB.scan('users', {
+    const usersTableName = dynamoDB.getTableName('users')
+    logger.debug(`テーブル名解決: users -> ${usersTableName}`)
+    const usersScanResult = await dynamoDB.scan(usersTableName, {
       select: 'COUNT'
     })
 
