@@ -58,6 +58,9 @@ infra/
 
    # オプション: S3バケット名をカスタマイズ（グローバルにユニークである必要があります）
    # uploads_bucket_name = "my-company-futura-dev-uploads-unique-123"
+
+   # オプション: Cognito Domainをカスタマイズ（リージョン内でユニークである必要があります）
+   # cognito_domain = "my-company-futura-dev-auth"
    ```
 
 3. **Terraform Stateバケットをセットアップ** (初回のみ):
@@ -129,6 +132,7 @@ infra/
    | `PROJECT_NAME` | `futura` | プロジェクト名 |
    | `TF_STATE_BUCKET` | `futura-terraform-state-...` | setup-backend.shで作成したバケット名 |
    | `UPLOADS_BUCKET_NAME` | (オプション) | S3バケット名のカスタマイズ（グローバルにユニーク） |
+   | `COGNITO_DOMAIN` | (オプション) | Cognito Domainのカスタマイズ（リージョン内でユニーク） |
 
 3. **CodeBuildからビルドを実行**
 
@@ -194,6 +198,33 @@ S3バケット名は**全世界でユニーク**である必要があります�
 - 会社名やチーム名のプレフィックスを追加: `acme-futura-dev-uploads`
 - AWSアカウントIDのサフィックスを追加: `futura-dev-uploads-123456789012`
 - ランダムな識別子を追加: `futura-dev-uploads-a1b2c3d4`
+
+### Cognito User Pool Domainのカスタマイズ
+
+Cognito User Pool Domainは**AWSリージョン内でユニーク**である必要があります。同じリージョンで同じドメイン名が使用されている場合、デプロイが失敗します。
+
+**デフォルトの命名規則**:
+```
+{project_name}-{environment}-auth
+例: futura-dev-auth
+```
+
+**カスタマイズ方法**:
+
+1. **Terraformの場合**（`terraform.tfvars`）:
+   ```hcl
+   cognito_domain = "your-company-futura-dev-auth"
+   ```
+
+2. **CodeBuildの場合**（環境変数）:
+   ```
+   COGNITO_DOMAIN=your-company-futura-dev-auth
+   ```
+
+**推奨される命名規則**:
+- 会社名やチーム名のプレフィックスを追加: `acme-futura-dev-auth`
+- AWSアカウントIDのサフィックスを追加: `futura-dev-auth-123456`
+- ランダムな識別子を追加: `futura-dev-auth-a1b2c3`
 
 ## デプロイ後の設定
 

@@ -123,8 +123,9 @@ resource "aws_cognito_user_pool_client" "main" {
 }
 
 # Cognito ユーザープールドメイン
+# Domain name can be overridden via cognito_domain variable to ensure uniqueness
 resource "aws_cognito_user_pool_domain" "main" {
-  domain       = "${var.project_name}-${var.environment}-auth"
+  domain       = var.cognito_domain != "" ? var.cognito_domain : "${var.project_name}-${var.environment}-auth"
   user_pool_id = aws_cognito_user_pool.main.id
 }
 
