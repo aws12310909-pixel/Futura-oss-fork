@@ -17,35 +17,48 @@ const logger = useLogger({ prefix: '[API-AUTH-LOGIN]' })
 async function checkAndSyncIfNeeded(groups: string[], email: string): Promise<void> {
   // 管理者ユーザーのみチェック
   if (!groups.includes('administrator')) {
+    logger.debug(`ユーザー ${email} は管理者ではないため、同期チェックをスキップ`)
     return
   }
 
   try {
-    logger.info('管理者ユーザーの初回ログインを検出、DB状態をチェック中...')
-    
+    logger.info(`=== 管理者ユーザー ${email} の初回ログインを検出、DB状態をチェック中... ===`)
+
     const dynamoDB = getDynamoDBService()
-    
+
     // ユーザーテーブルの件数をチェック
-    const usersScanResult = await dynamoDB.scan('users', {
+    logger.info('ユーザーテーブルのレコード数をチェック中...')
+    const usersTableName = dynamoDB.getTableName('users')
+    logger.debug(`テーブル名解決: users -> ${usersTableName}`)
+    const usersScanResult = await dynamoDB.scan(usersTableName, {
       select: 'COUNT'
     })
-    
+
+    logger.info(`ユーザーテーブルのレコード数: ${usersScanResult.count}`)
+
     // ユーザーが存在しない場合は初回デプロイと判断
     if (usersScanResult.count === 0) {
-      logger.info('DBが空のため、初回デプロイと判断。Cognito同期を実行中...')
-      
+      logger.info('=== DBが空のため、初回デプロイと判断。Cognito同期を実行中... ===')
+
       try {
         const syncResults = await syncCognitoToDatabase()
-        logger.info('初回同期完了:', syncResults)
+        logger.info('=== 初回同期完了 ===')
+        logger.info(`ユーザー同期: ${syncResults.users.synced}件成功, ${syncResults.users.errors}件エラー`)
+        logger.info(`権限同期: ${syncResults.permissions.synced}件成功, ${syncResults.permissions.errors}件エラー`)
+        logger.info(`グループ同期: ${syncResults.groups.synced}件成功, ${syncResults.groups.errors}件エラー`)
       } catch (syncError) {
-        logger.error('初回同期エラー:', syncError)
+        logger.error('=== 初回同期エラー ===')
+        logger.error('エラー詳細:', syncError)
+        logger.error('スタックトレース:', (syncError as Error).stack)
         // 同期エラーでもログインは続行（フォールバック）
       }
     } else {
-      logger.debug('DBにユーザーが存在するため、同期は不要')
+      logger.info(`DBに${usersScanResult.count}件のユーザーが存在するため、同期は不要`)
     }
   } catch (error) {
-    logger.warn('DB状態チェックエラー、同期はスキップ:', error)
+    logger.error('=== DB状態チェックエラー、同期はスキップ ===')
+    logger.error('エラー詳細:', error)
+    logger.error('スタックトレース:', (error as Error).stack)
     // エラーが発生してもログインは続行
   }
 }

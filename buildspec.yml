@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 22
     commands:
       - echo Installing dependencies
       - npm ci
@@ -74,9 +74,18 @@ phases:
       
       # Create deployment directory
       - mkdir -p deploy
-      
+
       # Copy server files directly to deploy directory (not the .output directory)
       - cp -r .output/server/* deploy/
+
+      # Copy .env file to deployment package if it exists
+      - |
+        if [ -f .env ]; then
+          echo "Copying .env file to Lambda deployment package"
+          cp .env deploy/.env
+        else
+          echo "WARNING: .env file not found, Lambda may not have environment configuration"
+        fi
       
       # Upload static files to S3
       - echo Uploading static files to S3 bucket
@@ -103,7 +112,6 @@ phases:
       # Wait for Lambda update to complete
       - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME
 
-      
       # Clear CloudFront cache
       - echo Clearing CloudFront cache for distribution $CLOUDFRONT_DISTRIBUTION_ID
       - |

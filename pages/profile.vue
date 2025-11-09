@@ -302,10 +302,29 @@ const uploadImage = async (file: File) => {
   uploadLoading.value = true
   
   try {
-    const formData = new FormData()
-    formData.append('file', file)
+    // Validate file size (max 3MB)
+    const maxSize = 3 * 1024 * 1024 // 3MB
+    if (file.size > maxSize) {
+      showError('ファイルサイズが大きすぎます。3MB以下のファイルを選択してください')
+      return
+    }
 
-    await apiClient.post('/upload/image', formData)
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+    if (!allowedTypes.includes(file.type)) {
+      showError('ファイル形式が無効です。JPEG、PNG形式のファイルを選択してください')
+      return
+    }
+
+    // Convert file to Base64
+    const base64Data = await fileToBase64(file)
+
+    // Send as JSON
+    await apiClient.post('/upload/image', {
+      filename: file.name,
+      contentType: file.type,
+      base64Data
+    })
 
     showSuccess('画像をアップロードしました')
     await loadProfile()
@@ -317,7 +336,7 @@ const uploadImage = async (file: File) => {
       if (errorData?.statusMessage?.includes('Invalid file type')) {
         showError('ファイル形式が無効です。JPEG、PNG形式のファイルを選択してください')
       } else if (errorData?.statusMessage?.includes('File size too large')) {
-        showError('ファイルサイズが大きすぎます。5MB以下のファイルを選択してください')
+        showError('ファイルサイズが大きすぎます。3MB以下のファイルを選択してください')
       } else {
         showError('画像のアップロードに失敗しました')
       }
@@ -331,6 +350,20 @@ const uploadImage = async (file: File) => {
       fileInput.value.value = ''
     }
   }
+}
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64 = result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 const viewFullImage = () => {

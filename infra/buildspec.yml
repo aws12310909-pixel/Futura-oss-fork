@@ -1,0 +1,136 @@
+version: 0.2
+
+# M・S CFD App - CodeBuild Terraform Deployment
+#
+# 必要な環境変数:
+#   - ENVIRONMENT: dev/staging/prod
+#   - AWS_REGION: AWSリージョン (例: ap-northeast-1)
+#   - PROJECT_NAME: プロジェクト名 (例: futura)
+#   - TF_STATE_BUCKET: Terraform Stateバケット名 (事前作成必須)
+
+env:
+  variables:
+    TF_IN_AUTOMATION: "true"
+    TF_INPUT: "false"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - |
+        echo "🚀 Starting Terraform deployment via CodeBuild"
+        echo "=================================================="
+
+      # Terraformインストール
+      - |
+        echo "📦 Installing Terraform..."
+        wget -q https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip
+        unzip -q terraform_1.7.5_linux_amd64.zip
+        mv terraform /usr/local/bin/
+        terraform --version
+
+  pre_build:
+    commands:
+      - |
+        echo "🔍 Pre-deployment validation..."
+        cd infra
+
+      # 環境変数チェックと設定確認
+      - |
+        if [ -z "$ENVIRONMENT" ] || [ -z "$AWS_REGION" ] || [ -z "$PROJECT_NAME" ] || [ -z "$TF_STATE_BUCKET" ]; then
+          echo "❌ ERROR: Missing required environment variables"
+          echo "Required: ENVIRONMENT, AWS_REGION, PROJECT_NAME, TF_STATE_BUCKET"
+          exit 1
+        fi
+        echo "✅ Environment: $ENVIRONMENT"
+        echo "✅ Region: $AWS_REGION"
+        echo "✅ Project: $PROJECT_NAME"
+        echo "✅ State Bucket: $TF_STATE_BUCKET"
+
+      # AWS認証確認
+      - |
+        echo "🔐 Verifying AWS authentication..."
+        aws sts get-caller-identity
+
+      # Terraform Stateバケット存在確認
+      - |
+        echo "🪣 Checking Terraform State bucket..."
+        if ! aws s3 ls "s3://$TF_STATE_BUCKET" > /dev/null 2>&1; then
+          echo "❌ ERROR: Terraform State bucket '$TF_STATE_BUCKET' does not exist"
+          echo ""
+          echo "📋 Please create the state bucket first by running locally:"
+          echo "   cd infra"
+          echo "   ./setup-backend.sh"
+          echo ""
+          echo "Then set the bucket name in CodeBuild environment variable TF_STATE_BUCKET"
+          exit 1
+        fi
+        echo "✅ State bucket exists"
+
+      # backend.hcl生成
+      - |
+        echo "📄 Generating backend.hcl..."
+        cat > backend.hcl << EOF
+        bucket  = "$TF_STATE_BUCKET"
+        key     = "$PROJECT_NAME/$ENVIRONMENT/terraform.tfstate"
+        region  = "$AWS_REGION"
+        encrypt = true
+        EOF
+        cat backend.hcl
+
+      # terraform.tfvars生成
+      - |
+        echo "📄 Generating terraform.tfvars..."
+        cat > terraform.tfvars << EOF
+        aws_region   = "$AWS_REGION"
+        environment  = "$ENVIRONMENT"
+        project_name = "$PROJECT_NAME"
+        EOF
+        cat terraform.tfvars
+
+  build:
+    commands:
+      - |
+        echo "🏗️  Starting Terraform deployment..."
+
+      # Terraform初期化
+      - |
+        echo "⚙️  Initializing Terraform..."
+        terraform init -backend-config=backend.hcl -no-color
+
+      # Terraformプラン
+      - |
+        echo "📋 Creating deployment plan..."
+        terraform plan -out=tfplan -no-color
+
+      # Terraform適用
+      - |
+        echo "🚀 Applying infrastructure changes..."
+        terraform apply -auto-approve tfplan -no-color
+
+  post_build:
+    commands:
+      - |
+        echo "✅ Deployment completed successfully!"
+        echo ""
+        echo "📊 Infrastructure Outputs:"
+        terraform output -no-color
+        echo ""
+        echo "🎉 Deployment finished for environment: $ENVIRONMENT"
+
+      # クリーンアップ
+      - |
+        rm -f tfplan backend.hcl terraform.tfvars
+
+artifacts:
+  files:
+    - infra/terraform.tfstate
+  name: terraform-deployment-$ENVIRONMENT-$(date +%Y%m%d-%H%M%S)
+  discard-paths: yes
+
+reports:
+  terraform-report:
+    files:
+      - 'infra/**/*'
+    file-format: 'PLAINTEXT'

@@ -1,95 +1,289 @@
-# M・S CFD App Infrastructure
+# Futura インフラストラクチャ
 
-This directory contains Terraform configurations for the M・S CFD App infrastructure.
+このディレクトリには、FuturaアプリケーションのAWSインフラストラクチャを管理するTerraform設定ファイルが含まれています。
 
-## Structure
+## ディレクトリ構成
 
 ```
 infra/
-├── main.tf              # Main Terraform configuration
-├── variables.tf         # Input variables
-├── outputs.tf          # Output values
-├── terraform.tfvars.example  # Example variables file
-├── cognito/            # Cognito User Pools configuration
-├── dynamodb/           # DynamoDB tables configuration
-├── s3/                # S3 bucket configuration
-├── iam/               # IAM roles and policies
-└── lambda/            # Lambda function configuration
+├── main.tf                      # メインのTerraform設定
+├── backend.tf                   # S3リモートバックエンド設定
+├── variables.tf                 # 入力変数定義
+├── outputs.tf                   # 出力値定義
+├── terraform.tfvars.example     # 変数ファイルのサンプル
+├── buildspec.yml                # AWS CodeBuild用ビルド設定
+├── setup-backend.sh             # Terraform Stateバケットセットアップスクリプト
+├── deploy.sh                    # ローカルデプロイスクリプト
+├── cognito/                     # Cognito User Pool設定
+├── dynamodb/                    # DynamoDBテーブル設定
+├── s3/                          # S3バケット設定
+├── iam/                         # IAMロールとポリシー設定
+├── lambda/                      # Lambda関数設定
+└── docs/
+    └── CODEBUILD_SETUP.md       # CodeBuildセットアップガイド
 ```
 
-## Prerequisites
+## 前提条件
 
-1. AWS CLI configured with appropriate credentials
-2. Terraform installed (>= 1.0)
-3. Appropriate AWS permissions for:
-   - Cognito
-   - DynamoDB
-   - S3
-   - IAM
-   - Lambda
-   - CloudWatch
+1. **AWS CLI** がインストールされ、適切な認証情報で設定されていること
+2. **Terraform** (>= 1.0) がインストールされていること
+3. 以下のAWSリソースに対する適切な権限:
+   - Amazon Cognito
+   - Amazon DynamoDB
+   - Amazon S3
+   - AWS IAM
+   - AWS Lambda
+   - Amazon CloudWatch
 
-## Deployment
+## デプロイ方法
 
-1. Copy the example variables file:
+このプロジェクトは2つのデプロイ方法をサポートしています。
+
+### オプション1: ローカル環境からのデプロイ
+
+開発環境や初回セットアップ時に適しています。
+
+#### 手順
+
+1. **サンプル変数ファイルをコピー**:
    ```bash
    cp terraform.tfvars.example terraform.tfvars
    ```
 
-2. Edit `terraform.tfvars` with your specific values:
+2. **`terraform.tfvars` を編集**:
    ```hcl
    aws_region   = "ap-northeast-1"
-   environment  = "dev"
+   environment  = "dev"          # dev, staging, prod のいずれか
    project_name = "futura"
    ```
 
-3. Initialize Terraform:
+3. **Terraform Stateバケットをセットアップ** (初回のみ):
    ```bash
-   terraform init
+   ./setup-backend.sh
    ```
 
-4. Plan the deployment:
+   このスクリプトは以下を実行します:
+   - S3バケットの作成(暗号化、バージョニング有効)
+   - `backend.hcl` ファイルの生成
+
+4. **Terraformを初期化**:
+   ```bash
+   terraform init -backend-config=backend.hcl
+   ```
+
+5. **デプロイ計画を確認**:
    ```bash
    terraform plan
    ```
 
-5. Apply the configuration:
+6. **インフラストラクチャをデプロイ**:
    ```bash
    terraform apply
    ```
 
-## Resources Created
+#### 簡単デプロイ
 
-- **Cognito User Pool**: User authentication and authorization
-- **DynamoDB Tables**: Data storage (5 tables)
-- **S3 Bucket**: File upload storage (private)
-- **IAM Roles/Policies**: Lambda execution permissions
-- **Lambda Function**: Placeholder for Amplify deployment
-- **CloudWatch Log Groups**: Application logging
+すべての手順を自動化したスクリプトも用意しています:
 
-## Important Notes
+```bash
+./deploy.sh
+```
 
-- The initial admin user is created with username `admin` and temporary password `TempPass123!`
-- All resources are tagged with environment and project information
-- DynamoDB tables have point-in-time recovery enabled
-- S3 bucket is private with versioning enabled
-- Lambda function is a placeholder - actual deployment via Amplify
+このスクリプトは以下を実行します:
+- AWS認証確認
+- Terraform バージョンチェック
+- backend.hcl の存在確認(なければ setup-backend.sh を実行)
+- terraform.tfvars の存在確認
+- Terraform init, plan, apply の実行
 
-## Environment Variables
+### オプション2: AWS CodeBuildからのデプロイ (推奨)
 
-After deployment, you'll need these values for your application:
+本番環境やチーム開発で推奨される方法です。AWS CodeBuildを使用することで、一貫性のあるデプロイ環境を実現できます。
 
-- `COGNITO_USER_POOL_ID`: From output `cognito_user_pool_id`
-- `COGNITO_CLIENT_ID`: From output `cognito_user_pool_client_id`
-- `S3_BUCKET_NAME`: From output `s3_bucket_name`
-- `DYNAMODB_TABLE_NAMES`: From output `dynamodb_table_names`
+#### 特徴
 
-## Cleanup
+- ✅ ローカル環境に依存しない一貫したデプロイ
+- ✅ 環境変数による柔軟な環境管理(dev/staging/prod)
+- ✅ AWSマネージドな実行環境
+- ✅ CloudWatch Logsによるデプロイログの保存
 
-To destroy all resources:
+#### セットアップ手順
+
+1. **Terraform Stateバケットを作成** (初回のみ):
+   ```bash
+   cd infra
+   ./setup-backend.sh
+   ```
+
+   生成された `backend.hcl` 内のバケット名をメモしてください。
+
+2. **CodeBuildプロジェクトを作成**し、以下の環境変数を設定:
+
+   | 環境変数名 | 値の例 | 説明 |
+   |-----------|--------|------|
+   | `ENVIRONMENT` | `dev` | デプロイ環境 (dev/staging/prod) |
+   | `AWS_REGION` | `ap-northeast-1` | AWSリージョン |
+   | `PROJECT_NAME` | `futura` | プロジェクト名 |
+   | `TF_STATE_BUCKET` | `futura-terraform-state-...` | setup-backend.shで作成したバケット名 |
+
+3. **CodeBuildからビルドを実行**
+
+詳細な手順は **[CodeBuildセットアップガイド](docs/CODEBUILD_SETUP.md)** を参照してください。
+
+## 作成されるAWSリソース
+
+| リソース | 説明 | 用途 |
+|---------|------|------|
+| **Cognito User Pool** | ユーザー認証・認可 | ユーザー管理、JWT発行 |
+| **DynamoDB テーブル (5個)** | NoSQLデータベース | ユーザー、取引、市場レート、セッション、権限 |
+| **S3 バケット** | オブジェクトストレージ | プロフィール画像などのファイル保存 |
+| **IAM ロール/ポリシー** | 権限管理 | Lambda実行ロール、アクセス制御 |
+| **Lambda 関数** | サーバーレス関数 | プレースホルダー(将来の拡張用) |
+| **CloudWatch ロググループ** | ログ管理 | アプリケーションログの保存 |
+
+### DynamoDBテーブル詳細
+
+1. **users**: ユーザープロフィール情報
+2. **transactions**: Bitcoin取引履歴
+3. **market_rates**: Bitcoin市場価格データ
+4. **sessions**: セッション管理
+5. **permissions**: ユーザー権限管理
+
+すべてのテーブルでポイントインタイムリカバリ(PITR)が有効化されています。
+
+## 重要な注意事項
+
+- 初期管理者ユーザーは以下の認証情報で作成されます:
+  - メールアドレス: `admin@example.com`
+  - 初期パスワード: `TempAdmin123!`
+  - **⚠️ デプロイ後、必ずパスワードを変更してください**
+
+- すべてのリソースに環境とプロジェクト情報のタグが付与されます
+
+- S3バケットはプライベート設定で、バージョニングが有効化されています
+
+- Lambda関数は現在プレースホルダーです(実際のデプロイはNuxtサーバーで実行)
+
+## デプロイ後の設定
+
+デプロイが完了したら、以下の出力値をNuxtアプリケーションの環境変数に設定してください。
+
+### 出力値の確認
+
+```bash
+terraform output
+```
+
+### Nuxtアプリケーションへの設定
+
+`.env` ファイルまたは環境変数に以下を設定:
+
+```bash
+# Cognito設定
+NUXT_PUBLIC_COGNITO_USER_POOL_ID="<cognito_user_pool_id の値>"
+NUXT_PUBLIC_COGNITO_CLIENT_ID="<cognito_user_pool_client_id の値>"
+NUXT_PUBLIC_COGNITO_REGION="ap-northeast-1"
+
+# S3設定
+NUXT_S3_BUCKET_NAME="<s3_bucket_name の値>"
+
+# DynamoDB設定
+NUXT_DYNAMODB_TABLE_PREFIX="futura-dev"  # environment に応じて変更
+```
+
+## テストアカウント
+
+デプロイ後、以下のテストアカウントが利用可能です:
+
+| 役割 | メールアドレス | 初期パスワード | 権限 |
+|-----|--------------|--------------|------|
+| 管理者 | admin@example.com | TempAdmin123! | フルアクセス |
+| 一般ユーザー | user@example.com | TempUser123! | 読み取り専用 |
+
+**⚠️ セキュリティ注意**: 本番環境では必ず以下を実施してください:
+1. 初期パスワードの変更
+2. MFAの有効化
+3. テストアカウントの削除または無効化
+
+## トラブルシューティング
+
+### エラー: Backend configuration not found
+
+```
+Error: Backend initialization required
+```
+
+**解決方法**: `./setup-backend.sh` を実行してStateバケットを作成してください。
+
+### エラー: Invalid credentials
+
+```
+Error: error configuring Terraform AWS Provider: no valid credential sources
+```
+
+**解決方法**: AWS CLIの設定を確認してください:
+```bash
+aws configure
+aws sts get-caller-identity
+```
+
+### エラー: Resource already exists
+
+```
+Error: error creating DynamoDB Table: ResourceInUseException
+```
+
+**解決方法**: 既存のリソースをインポートするか、別の環境名を使用してください:
+```bash
+# 既存リソースのインポート
+./import-resources.sh
+
+# または別の環境名を使用
+export ENVIRONMENT="dev2"
+```
+
+## リソースの削除
+
+**⚠️ 警告**: このコマンドはすべてのリソースとデータを**完全に削除**します。
 
 ```bash
 terraform destroy
 ```
 
-**Warning**: This will permanently delete all data. Make sure to backup any important data before running this command.
+削除前に必ず以下を確認してください:
+1. 重要なデータのバックアップ
+2. 削除対象リソースの確認
+3. 本番環境でないことの確認
+
+## セキュリティのベストプラクティス
+
+1. **認証情報の管理**
+   - `backend.hcl` と `terraform.tfvars` は `.gitignore` に含まれています
+   - これらのファイルは**絶対にGitにコミットしないでください**
+
+2. **最小権限の原則**
+   - IAMロールには必要最小限の権限のみを付与
+
+3. **暗号化**
+   - S3バケット: サーバーサイド暗号化(AES-256)
+   - DynamoDB: 保管時の暗号化有効
+   - Terraform State: S3バケット暗号化
+
+4. **監査とログ**
+   - CloudWatch Logsでアプリケーションログを管理
+   - DynamoDBのPITRで35日間のバックアップ
+
+5. **環境分離**
+   - 本番/ステージング/開発環境は別々のAWSアカウントまたはリージョンで管理することを推奨
+
+## 関連ドキュメント
+
+- [CodeBuildセットアップガイド](docs/CODEBUILD_SETUP.md) - AWS CodeBuildでの自動デプロイ設定
+- [CLAUDE.md](../CLAUDE.md) - プロジェクト全体のアーキテクチャとガイドライン
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [AWS Cognito](https://docs.aws.amazon.com/cognito/)
+- [Amazon DynamoDB](https://docs.aws.amazon.com/dynamodb/)
+
+## サポート
+
+問題が発生した場合は、GitHubのIssuesで報告してください。
