@@ -21,7 +21,7 @@
       </v-app-bar-nav-icon>
       
       <v-toolbar-title class="flex items-center space-x-2">
-        <Icon name="mdi:bitcoin" class="text-xl text-primary-500" />
+        <CommonAppLogo size="md" :centered="false" />
         <span class="text-base font-semibold text-gray-900">M・S CFD App</span>
       </v-toolbar-title>
     </v-app-bar>
