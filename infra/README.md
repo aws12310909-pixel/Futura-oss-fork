@@ -55,6 +55,9 @@ infra/
    aws_region   = "ap-northeast-1"
    environment  = "dev"          # dev, staging, prod のいずれか
    project_name = "futura"
+
+   # オプション: S3バケット名をカスタマイズ（グローバルにユニークである必要があります）
+   # uploads_bucket_name = "my-company-futura-dev-uploads-unique-123"
    ```
 
 3. **Terraform Stateバケットをセットアップ** (初回のみ):
@@ -125,6 +128,7 @@ infra/
    | `AWS_REGION` | `ap-northeast-1` | AWSリージョン |
    | `PROJECT_NAME` | `futura` | プロジェクト名 |
    | `TF_STATE_BUCKET` | `futura-terraform-state-...` | setup-backend.shで作成したバケット名 |
+   | `UPLOADS_BUCKET_NAME` | (オプション) | S3バケット名のカスタマイズ（グローバルにユニーク） |
 
 3. **CodeBuildからビルドを実行**
 
@@ -163,6 +167,33 @@ infra/
 - S3バケットはプライベート設定で、バージョニングが有効化されています
 
 - Lambda関数は現在プレースホルダーです(実際のデプロイはNuxtサーバーで実行)
+
+### S3バケット名のカスタマイズ
+
+S3バケット名は**全世界でユニーク**である必要があります。他のAWSアカウントで同じバケット名が使用されている場合、デプロイが失敗します。
+
+**デフォルトの命名規則**:
+```
+{project_name}-{environment}-uploads
+例: futura-dev-uploads
+```
+
+**カスタマイズ方法**:
+
+1. **Terraformの場合**（`terraform.tfvars`）:
+   ```hcl
+   uploads_bucket_name = "your-company-futura-dev-uploads-unique-identifier"
+   ```
+
+2. **CodeBuildの場合**（環境変数）:
+   ```
+   UPLOADS_BUCKET_NAME=your-company-futura-dev-uploads-unique-identifier
+   ```
+
+**推奨される命名規則**:
+- 会社名やチーム名のプレフィックスを追加: `acme-futura-dev-uploads`
+- AWSアカウントIDのサフィックスを追加: `futura-dev-uploads-123456789012`
+- ランダムな識別子を追加: `futura-dev-uploads-a1b2c3d4`
 
 ## デプロイ後の設定
 

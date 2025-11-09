@@ -9,3 +9,8 @@ environment = "dev"
 
 # Project name
 project_name = "futura"
+
+# Optional: Custom S3 bucket name for uploads (must be globally unique)
+# If not specified, defaults to: {project_name}-{environment}-uploads
+# Uncomment and customize if you encounter bucket name conflicts:
+# uploads_bucket_name = "your-company-futura-dev-uploads-unique-identifier"

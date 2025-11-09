@@ -39,9 +39,10 @@ module "dynamodb" {
 # S3
 module "s3" {
   source = "./s3"
-  
-  environment = var.environment
-  project_name = var.project_name
+
+  environment         = var.environment
+  project_name        = var.project_name
+  uploads_bucket_name = var.uploads_bucket_name
 }
 
 # IAM
