@@ -18,20 +18,23 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      - echo "🚀 Starting Terraform deployment via CodeBuild"
-      - echo "=================================================="
+      - |
+        echo "🚀 Starting Terraform deployment via CodeBuild"
+        echo "=================================================="
 
       # Terraformインストール
-      - echo "📦 Installing Terraform..."
-      - wget -q https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip
-      - unzip -q terraform_1.7.5_linux_amd64.zip
-      - mv terraform /usr/local/bin/
-      - terraform --version
+      - |
+        echo "📦 Installing Terraform..."
+        wget -q https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip
+        unzip -q terraform_1.7.5_linux_amd64.zip
+        mv terraform /usr/local/bin/
+        terraform --version
 
   pre_build:
     commands:
-      - echo "🔍 Pre-deployment validation..."
-      - cd infra
+      - |
+        echo "🔍 Pre-deployment validation..."
+        cd infra
 
       # 環境変数チェックと設定確認
       - |
@@ -88,31 +91,37 @@ phases:
 
   build:
     commands:
-      - echo "🏗️  Starting Terraform deployment..."
+      - |
+        echo "🏗️  Starting Terraform deployment..."
 
       # Terraform初期化
-      - echo "⚙️  Initializing Terraform..."
-      - terraform init -backend-config=backend.hcl -no-color
+      - |
+        echo "⚙️  Initializing Terraform..."
+        terraform init -backend-config=backend.hcl -no-color
 
       # Terraformプラン
-      - echo "📋 Creating deployment plan..."
-      - terraform plan -out=tfplan -no-color
+      - |
+        echo "📋 Creating deployment plan..."
+        terraform plan -out=tfplan -no-color
 
       # Terraform適用
-      - echo "🚀 Applying infrastructure changes..."
-      - terraform apply -auto-approve tfplan -no-color
+      - |
+        echo "🚀 Applying infrastructure changes..."
+        terraform apply -auto-approve tfplan -no-color
 
   post_build:
     commands:
-      - echo "✅ Deployment completed successfully!"
-      - echo ""
-      - echo "📊 Infrastructure Outputs:"
-      - terraform output -no-color
-      - echo ""
-      - echo "🎉 Deployment finished for environment: $ENVIRONMENT"
+      - |
+        echo "✅ Deployment completed successfully!"
+        echo ""
+        echo "📊 Infrastructure Outputs:"
+        terraform output -no-color
+        echo ""
+        echo "🎉 Deployment finished for environment: $ENVIRONMENT"
 
       # クリーンアップ
-      - rm -f tfplan backend.hcl terraform.tfvars
+      - |
+        rm -f tfplan backend.hcl terraform.tfvars
 
 artifacts:
   files:
