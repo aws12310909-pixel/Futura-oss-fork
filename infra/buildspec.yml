@@ -33,26 +33,26 @@ phases:
       - echo "🔍 Pre-deployment validation..."
       - cd infra
 
-      # 環境変数チェック
+      # 環境変数チェックと設定確認
       - |
         if [ -z "$ENVIRONMENT" ] || [ -z "$AWS_REGION" ] || [ -z "$PROJECT_NAME" ] || [ -z "$TF_STATE_BUCKET" ]; then
           echo "❌ ERROR: Missing required environment variables"
           echo "Required: ENVIRONMENT, AWS_REGION, PROJECT_NAME, TF_STATE_BUCKET"
           exit 1
         fi
-
-      - echo "✅ Environment: $ENVIRONMENT"
-      - echo "✅ Region: $AWS_REGION"
-      - echo "✅ Project: $PROJECT_NAME"
-      - echo "✅ State Bucket: $TF_STATE_BUCKET"
+        echo "✅ Environment: $ENVIRONMENT"
+        echo "✅ Region: $AWS_REGION"
+        echo "✅ Project: $PROJECT_NAME"
+        echo "✅ State Bucket: $TF_STATE_BUCKET"
 
       # AWS認証確認
-      - echo "🔐 Verifying AWS authentication..."
-      - aws sts get-caller-identity
+      - |
+        echo "🔐 Verifying AWS authentication..."
+        aws sts get-caller-identity
 
       # Terraform Stateバケット存在確認
-      - echo "🪣 Checking Terraform State bucket..."
       - |
+        echo "🪣 Checking Terraform State bucket..."
         if ! aws s3 ls "s3://$TF_STATE_BUCKET" > /dev/null 2>&1; then
           echo "❌ ERROR: Terraform State bucket '$TF_STATE_BUCKET' does not exist"
           echo ""
@@ -63,28 +63,28 @@ phases:
           echo "Then set the bucket name in CodeBuild environment variable TF_STATE_BUCKET"
           exit 1
         fi
-      - echo "✅ State bucket exists"
+        echo "✅ State bucket exists"
 
       # backend.hcl生成
-      - echo "📄 Generating backend.hcl..."
       - |
+        echo "📄 Generating backend.hcl..."
         cat > backend.hcl << EOF
         bucket  = "$TF_STATE_BUCKET"
         key     = "$PROJECT_NAME/$ENVIRONMENT/terraform.tfstate"
         region  = "$AWS_REGION"
         encrypt = true
         EOF
-      - cat backend.hcl
+        cat backend.hcl
 
       # terraform.tfvars生成
-      - echo "📄 Generating terraform.tfvars..."
       - |
+        echo "📄 Generating terraform.tfvars..."
         cat > terraform.tfvars << EOF
         aws_region   = "$AWS_REGION"
         environment  = "$ENVIRONMENT"
         project_name = "$PROJECT_NAME"
         EOF
-      - cat terraform.tfvars
+        cat terraform.tfvars
 
   build:
     commands:
