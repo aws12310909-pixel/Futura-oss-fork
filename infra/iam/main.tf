@@ -74,9 +74,10 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb_access" {
 }
 
 # S3 access policy
+# Grants access to the specific S3 bucket specified via terraform.tfvars (uploads_bucket_name)
 resource "aws_iam_policy" "s3_access" {
   name        = "${var.project_name}-${var.environment}-s3-access"
-  description = "Policy for S3 access"
+  description = "Policy for S3 access to the uploads bucket"
 
   policy = jsonencode({
     Version = "2012-10-17"
