@@ -1202,8 +1202,14 @@ BTC Mock Appのバックエンド API の詳細な仕様書です。すべての
 
 **認証**: 必須
 
-**リクエスト**: `multipart/form-data`
-- `file`: 画像ファイル（JPEG/PNG、最大5MB）
+**リクエスト**: `application/json`
+```typescript
+{
+  filename: string      // ファイル名（例: "profile.jpg"）
+  contentType: string   // MIMEタイプ（例: "image/jpeg"）
+  base64Data: string    // Base64エンコードされた画像データ
+}
+```
 
 **レスポンス**:
 ```typescript
@@ -1219,7 +1225,7 @@ BTC Mock Appのバックエンド API の詳細な仕様書です。すべての
 
 **制限事項**:
 - ファイル形式: JPEG, PNG のみ
-- ファイルサイズ: 最大5MB
+- ファイルサイズ: 最大3MB（Base64エンコード前の実データサイズ）
 - アップロード先: AWS S3プライベートバケット
 
 ---

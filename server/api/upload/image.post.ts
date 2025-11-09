@@ -2,45 +2,45 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getDynamoDBService } from '~/server/utils/dynamodb'
 import { useLogger } from '~/composables/useLogger'
 
+interface UploadImageRequest {
+  filename: string
+  contentType: string
+  base64Data: string
+}
+
 export default defineEventHandler(async (event) => {
   const logger = useLogger({ prefix: '[UploadImage]' })
   try {
     const currentUser = await requireAuth(event)
     
-    // Parse form data
-    const formData = await readMultipartFormData(event)
+    // Parse JSON body
+    const body = await readBody<UploadImageRequest>(event)
     
-    if (!formData || formData.length === 0) {
+    if (!body || !body.filename || !body.contentType || !body.base64Data) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'No file provided'
-      })
-    }
-
-    const file = formData.find(item => item.name === 'file')
-    
-    if (!file || !file.data) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Invalid file data'
+        statusMessage: 'Missing required fields: filename, contentType, base64Data'
       })
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
-    if (!allowedTypes.includes(file.type || '')) {
+    if (!allowedTypes.includes(body.contentType)) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Invalid file type. Only JPEG and PNG are allowed'
       })
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    if (file.data.length > maxSize) {
+    // Decode Base64 to Buffer
+    const fileBuffer = Buffer.from(body.base64Data, 'base64')
+
+    // Validate file size (max 3MB)
+    const maxSize = 3 * 1024 * 1024 // 3MB
+    if (fileBuffer.length > maxSize) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'File size too large. Maximum 5MB allowed'
+        statusMessage: 'File size too large. Maximum 3MB allowed'
       })
     }
 
@@ -50,21 +50,29 @@ export default defineEventHandler(async (event) => {
     })
 
     // Generate unique file name
-    const fileExtension = file.filename?.split('.').pop() || 'jpg'
+    const fileExtension = body.filename.split('.').pop() || 'jpg'
     const fileName = `profile-images/${currentUser.user_id}/${Date.now()}.${fileExtension}`
 
     // Upload to S3
     const uploadCommand = new PutObjectCommand({
       Bucket: config.s3UploadsBucket,
       Key: fileName,
-      Body: file.data,
-      ContentType: file.type
+      Body: fileBuffer,
+      ContentType: body.contentType
     })
 
     await s3Client.send(uploadCommand)
 
-    // Update user profile with image URL
-    const imageUrl = `https://${config.s3UploadsBucket}.s3.${config.awsRegion}.amazonaws.com/${fileName}`
+    // Generate image URL
+    // imageBaseUrl is required (e.g., CloudFront URL) since S3 bucket is private
+    if (!config.imageBaseUrl) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Image base URL is not configured. Please set NUXT_IMAGE_BASE_URL environment variable'
+      })
+    }
+
+    const imageUrl = `${config.imageBaseUrl.replace(/\/$/, '')}/${fileName}`
     
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')

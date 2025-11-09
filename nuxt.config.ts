@@ -103,6 +103,7 @@ export default defineNuxtConfig({
     dynamodbPermissionsTable: process.env.NUXT_DYNAMODB_PERMISSIONS_TABLE || 'futura-dev-permissions',
     dynamodbBatchOperationsTable: process.env.NUXT_DYNAMODB_BATCH_OPERATIONS_TABLE || 'futura-dev-batch-operations',
     s3UploadsBucket: process.env.NUXT_S3_UPLOADS_BUCKET || 'futura-dev-uploads',
+    imageBaseUrl: process.env.NUXT_IMAGE_BASE_URL || '', // 画像URLのベースURL（CodeBuild環境変数から設定、バケット名とは異なる場合がある）
     cognitoUserPoolId: process.env.NUXT_PUBLIC_COGNITO_USER_POOL_ID || '',
     cognitoClientId: process.env.NUXT_PUBLIC_COGNITO_CLIENT_ID || '',
     
