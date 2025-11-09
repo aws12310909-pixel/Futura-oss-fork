@@ -44,7 +44,11 @@ resource "aws_iam_policy" "dynamodb_access" {
           "dynamodb:Query",
           "dynamodb:Scan",
           "dynamodb:BatchGetItem",
-          "dynamodb:BatchWriteItem"
+          "dynamodb:BatchWriteItem",
+          "dynamodb:TransactWriteItems",
+          "dynamodb:TransactGetItems",
+          "dynamodb:DescribeTable",
+          "dynamodb:ListTables"
         ]
         Resource = [
           for arn in values(var.dynamodb_table_arns) : arn
@@ -115,18 +119,40 @@ resource "aws_iam_policy" "cognito_access" {
       {
         Effect = "Allow"
         Action = [
+          # User management
           "cognito-idp:AdminCreateUser",
           "cognito-idp:AdminDeleteUser",
           "cognito-idp:AdminDisableUser",
           "cognito-idp:AdminEnableUser",
           "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminSetUserPassword",
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminResetUserPassword",
+
+          # User listing and retrieval
+          "cognito-idp:ListUsers",
+          "cognito-idp:GetUser",
+
+          # Group management
           "cognito-idp:AdminListGroupsForUser",
           "cognito-idp:AdminAddUserToGroup",
           "cognito-idp:AdminRemoveUserFromGroup",
-          "cognito-idp:AdminSetUserPassword",
-          "cognito-idp:AdminUpdateUserAttributes",
-          "cognito-idp:ListUsers",
-          "cognito-idp:ListUsersInGroup"
+          "cognito-idp:ListUsersInGroup",
+          "cognito-idp:ListGroups",
+          "cognito-idp:GetGroup",
+          "cognito-idp:CreateGroup",
+          "cognito-idp:DeleteGroup",
+          "cognito-idp:UpdateGroup",
+
+          # Authentication
+          "cognito-idp:InitiateAuth",
+          "cognito-idp:RespondToAuthChallenge",
+          "cognito-idp:AdminInitiateAuth",
+          "cognito-idp:AdminRespondToAuthChallenge",
+
+          # User Pool information
+          "cognito-idp:DescribeUserPool",
+          "cognito-idp:DescribeUserPoolClient"
         ]
         Resource = var.cognito_user_pool_arn
       }

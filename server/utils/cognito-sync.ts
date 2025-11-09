@@ -16,29 +16,40 @@ export async function syncCognitoToDatabase(): Promise<{
   groups: { synced: number; errors: number }
 }> {
   const logger = useLogger({ prefix: '[CognitoSync]' })
-  
-  logger.info('Cognito同期処理開始')
-  
+
+  logger.info('=== Cognito同期処理開始 ===')
+
   const syncResults = {
     users: { synced: 0, errors: 0 },
     permissions: { synced: 0, errors: 0 },
     groups: { synced: 0, errors: 0 }
   }
-  
-  // 1. Usersテーブル同期
-  logger.info('Usersテーブル同期開始')
-  syncResults.users = await syncUsersFromCognito()
-  
-  // 2. Permissionsテーブル同期
-  logger.info('Permissionsテーブル同期開始')
-  syncResults.permissions = await syncPermissionsFromCognito()
-  
-  // 3. グループ同期
-  logger.info('グループ同期開始')
-  syncResults.groups = await syncGroupsWithCognito()
-  
-  logger.info('Cognito同期処理完了:', syncResults)
-  return syncResults
+
+  try {
+    // 1. Usersテーブル同期
+    logger.info('=== 1/3: Usersテーブル同期開始 ===')
+    syncResults.users = await syncUsersFromCognito()
+    logger.info(`Usersテーブル同期完了: ${syncResults.users.synced}件成功, ${syncResults.users.errors}件エラー`)
+
+    // 2. Permissionsテーブル同期
+    logger.info('=== 2/3: Permissionsテーブル同期開始 ===')
+    syncResults.permissions = await syncPermissionsFromCognito()
+    logger.info(`Permissionsテーブル同期完了: ${syncResults.permissions.synced}件成功, ${syncResults.permissions.errors}件エラー`)
+
+    // 3. グループ同期
+    logger.info('=== 3/3: グループ同期開始 ===')
+    syncResults.groups = await syncGroupsWithCognito()
+    logger.info(`グループ同期完了: ${syncResults.groups.synced}件成功, ${syncResults.groups.errors}件エラー`)
+
+    logger.info('=== Cognito同期処理完了 ===')
+    logger.info('最終結果:', JSON.stringify(syncResults, null, 2))
+    return syncResults
+  } catch (error) {
+    logger.error('=== Cognito同期処理でエラー発生 ===')
+    logger.error('エラー詳細:', error)
+    logger.error('スタックトレース:', (error as Error).stack)
+    throw error
+  }
 }
 
 /**

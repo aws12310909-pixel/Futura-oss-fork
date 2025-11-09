@@ -19,17 +19,12 @@ resource "aws_lambda_function" "api_handler" {
   function_name    = "${var.project_name}-${var.environment}-api-handler"
   role            = var.lambda_execution_role_arn
   handler         = "index.handler"
-  runtime         = "nodejs18.x"
+  runtime         = "nodejs22.x"
   timeout         = 30
   memory_size     = 1024
 
-  # Environment variables for the Lambda function
-  environment {
-    variables = {
-      NODE_ENV = var.environment
-      REGION   = data.aws_region.current.name
-    }
-  }
+  # Environment variables are managed via .env file in the deployment package
+  # No need to set them here
 
   # This is just a placeholder - actual deployment via Amplify
   lifecycle {

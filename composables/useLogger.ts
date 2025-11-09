@@ -17,20 +17,25 @@ const LOG_LEVELS = {
  */
 export const useLogger = (config: LoggerConfig = {}) => {
   // 環境に基づくデフォルト設定（process.envを直接使用）
-  const isProduction = process.env.NODE_ENV === 'production'
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  const isProduction = nodeEnv === 'production' || nodeEnv === 'prod'
+  const isDevelopment = nodeEnv === 'development' || nodeEnv === 'dev'
+  // Lambda環境ではstg, stagingなどの値が入る可能性があるため、それらも考慮
+  const isServerSide = import.meta.server
+
   // デフォルト設定
   const defaultConfig: LoggerConfig = {
     level: isDevelopment ? LOG_LEVELS.Debug : LOG_LEVELS.Info,
-    enableInProduction: false,
-    prefix: import.meta.server ? '[SERVER]' : '[CLIENT]'
+    // サーバーサイド（Lambda含む）では常にログを有効化
+    enableInProduction: isServerSide,
+    prefix: isServerSide ? '[SERVER]' : '[CLIENT]'
   }
-  
+
   const finalConfig = { ...defaultConfig, ...config }
-  
+
   // プロダクション環境でのログ制御
-  const shouldLog = isDevelopment || finalConfig.enableInProduction
+  // サーバーサイドでは常にログを出力（CloudWatch用）
+  const shouldLog = isDevelopment || isServerSide || finalConfig.enableInProduction
   
   // consolaのインスタンスを作成
   const logger = consola.create({
