@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    max-width="700"
+    max-width="900"
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card v-if="user">
@@ -117,27 +117,73 @@
               <p class="text-sm text-red-800">{{ user.rejection_reason }}</p>
             </div>
           </div>
+
+          <!-- Dashboard Information -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">ダッシュボード情報</h3>
+            <div v-if="loadingDashboard" class="text-center py-8">
+              <v-progress-circular indeterminate color="primary" />
+              <p class="text-sm text-gray-500 mt-2">読み込み中...</p>
+            </div>
+            <div v-else-if="dashboardData" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label class="text-sm font-medium text-blue-600">現在の残高</label>
+                <p class="mt-1 text-lg font-bold text-blue-900 font-mono">
+                  {{ formatBTC(dashboardData.currentBalance) }} BTC
+                </p>
+                <p class="text-sm text-blue-700">
+                  {{ formatNumber(dashboardData.currentValue) }} JPY
+                </p>
+              </div>
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <label class="text-sm font-medium text-green-600">入金元本</label>
+                <p class="mt-1 text-lg font-bold text-green-900 font-mono">
+                  {{ formatBTC(dashboardData.depositPrincipal) }} BTC
+                </p>
+              </div>
+              <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <label class="text-sm font-medium text-orange-600">出金額</label>
+                <p class="mt-1 text-lg font-bold text-orange-900 font-mono">
+                  {{ formatBTC(dashboardData.withdrawalTotal) }} BTC
+                </p>
+              </div>
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <label class="text-sm font-medium text-purple-600">クレジットボーナス</label>
+                <p class="mt-1 text-lg font-bold text-purple-900 font-mono">
+                  {{ formatBTC(dashboardData.creditBonus) }} BTC
+                </p>
+              </div>
+              <div class="md:col-span-2" :class="[
+                dashboardData.netProfit > 0 ? 'bg-green-50 border-green-200' :
+                dashboardData.netProfit < 0 ? 'bg-red-50 border-red-200' :
+                'bg-gray-50 border-gray-200',
+                'border rounded-lg p-4'
+              ]">
+                <label class="text-sm font-medium" :class="[
+                  dashboardData.netProfit > 0 ? 'text-green-600' :
+                  dashboardData.netProfit < 0 ? 'text-red-600' :
+                  'text-gray-600'
+                ]">純利益</label>
+                <p class="mt-1 text-lg font-bold font-mono" :class="[
+                  dashboardData.netProfit > 0 ? 'text-green-900' :
+                  dashboardData.netProfit < 0 ? 'text-red-900' :
+                  'text-gray-900'
+                ]">
+                  {{ formatBTC(dashboardData.netProfit) }} BTC
+                </p>
+                <p class="text-xs text-gray-500 mt-1">残高 - 元本 + 出金額</p>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 bg-gray-50 rounded-lg">
+              <Icon name="mdi:chart-line" class="text-4xl text-gray-400 mb-2" />
+              <p class="text-gray-500">ダッシュボード情報を取得できませんでした</p>
+            </div>
+          </div>
         </div>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
-        <v-btn
-          v-if="!user.profile_approved && user.status !== 'deleted'"
-          color="success"
-          prepend-icon="mdi-check"
-          @click="$emit('approve', user)"
-        >
-          承認
-        </v-btn>
-        <v-btn
-          v-if="user.profile_approved && user.status !== 'deleted'"
-          color="error"
-          prepend-icon="mdi-close"
-          @click="$emit('reject', user)"
-        >
-          承認取り消し
-        </v-btn>
         <v-btn
           variant="text"
           @click="$emit('update:modelValue', false)"
@@ -150,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import type { User } from '~/types'
+import type { User, DashboardData } from '~/types'
 
 // Props & Emits
 const props = defineProps<{
@@ -160,13 +206,32 @@ const props = defineProps<{
 
 const _emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'approve': [user: User]
-  'reject': [user: User]
 }>()
 
 const { showError } = useNotification()
+const apiClient = useApiClient()
+const logger = useLogger({ prefix: '[AdminUserDetailsDialog]' })
+
+// State
+const dashboardData = ref<DashboardData | null>(null)
+const loadingDashboard = ref(false)
 
 // Methods
+const loadDashboardData = async () => {
+  if (!props.user?.user_id) return
+
+  loadingDashboard.value = true
+  try {
+    const response = await apiClient.get<DashboardData>(`/admin/users/${props.user.user_id}/dashboard`)
+    dashboardData.value = response.data!
+  } catch (error) {
+    logger.error('ダッシュボードデータの読み込みに失敗しました:', error)
+    showError('ダッシュボードデータの取得に失敗しました')
+  } finally {
+    loadingDashboard.value = false
+  }
+}
+
 const viewFullImage = () => {
   if (props.user?.profile_image_url) {
     window.open(props.user.profile_image_url, '_blank')
@@ -216,4 +281,22 @@ const formatDate = (dateString: string) => {
     minute: '2-digit'
   })
 }
+
+const formatBTC = (amount: number) => {
+  return amount.toFixed(8)
+}
+
+const formatNumber = (number: number) => {
+  return number.toLocaleString('ja-JP')
+}
+
+// Watch for dialog open/close
+watch(() => props.modelValue, (newValue) => {
+  if (newValue && props.user) {
+    loadDashboardData()
+  } else {
+    // Reset dashboard data when dialog closes
+    dashboardData.value = null
+  }
+})
 </script>

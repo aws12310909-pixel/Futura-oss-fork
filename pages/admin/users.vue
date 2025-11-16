@@ -91,6 +91,13 @@
               @click="openDepositDialog(item)"
             />
             <v-btn
+              size="small"
+              variant="text"
+              color="info"
+              icon="mdi-information-outline"
+              @click="openUserDetailsDialog(item)"
+            />
+            <v-btn
               v-if="item.status === 'active'"
               size="small"
               variant="text"
@@ -148,6 +155,12 @@
       default-reason="クレジットボーナス"
       @created="handleDepositCreated"
     />
+
+    <!-- User Details Dialog -->
+    <AdminUserDetailsDialog
+      v-model="showUserDetailsDialog"
+      :user="selectedUserForDetails"
+    />
   </div>
 </template>
 
@@ -179,6 +192,8 @@ const showResetPasswordDialog = ref(false)
 const selectedUser = ref<User | null>(null)
 const showDepositDialog = ref(false)
 const selectedUserForDeposit = ref<User | null>(null)
+const showUserDetailsDialog = ref(false)
+const selectedUserForDetails = ref<User | null>(null)
 
 // Options
 const statusOptions = [
@@ -295,6 +310,11 @@ const handleDepositCreated = () => {
   showDepositDialog.value = false
   selectedUserForDeposit.value = null
   loadUsers()
+}
+
+const openUserDetailsDialog = (user: User) => {
+  selectedUserForDetails.value = user
+  showUserDetailsDialog.value = true
 }
 
 // Utility functions
