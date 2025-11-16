@@ -19,14 +19,19 @@
               label="対象ユーザー *"
               variant="outlined"
               :rules="userRules"
+              :disabled="!!props.preselectedUserId"
               required
               @update:model-value="onUserChange"
             />
 
             <!-- User Balance Display -->
-            <div v-if="selectedUserBalance !== null" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div v-if="form.user_id && (loadingBalance || selectedUserBalance !== null)" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h4 class="font-medium text-blue-800 mb-2">現在の残高</h4>
-              <p class="text-lg font-semibold text-blue-900">
+              <div v-if="loadingBalance" class="flex items-center gap-2">
+                <v-progress-circular indeterminate color="primary" size="20" width="2" />
+                <span class="text-sm text-blue-700">残高を取得中...</span>
+              </div>
+              <p v-else class="text-lg font-semibold text-blue-900">
                 {{ selectedUserBalance }} BTC
               </p>
             </div>
@@ -172,6 +177,9 @@ const apiClient = useApiClient()
 const props = defineProps<{
   modelValue: boolean
   users: User[]
+  preselectedUserId?: string
+  defaultTransactionType?: 'deposit' | 'withdrawal'
+  defaultReason?: string
 }>()
 
 const emit = defineEmits<{
@@ -186,6 +194,7 @@ const { showSuccess, showError } = useNotification()
 const formRef = ref()
 const loading = ref(false)
 const selectedUserBalance = ref<number | null>(null)
+const loadingBalance = ref(false)
 const selectedCurrency = ref<'BTC' | 'JPY'>('BTC')
 const jpyAmount = ref<number>(0)
 const latestRate = ref<MarketRate | null>(null)
@@ -366,12 +375,13 @@ const formatCurrency = (amount: number): string => {
 }
 
 const resetForm = () => {
-  form.user_id = ''
+  form.user_id = props.preselectedUserId || ''
   form.amount = 0
-  form.transaction_type = 'deposit'
+  form.transaction_type = props.defaultTransactionType || 'deposit'
   form.memo = ''
-  form.reason = ''
+  form.reason = props.defaultReason || ''
   selectedUserBalance.value = null
+  loadingBalance.value = false
   selectedCurrency.value = 'BTC'
   jpyAmount.value = 0
   formRef.value?.resetValidation()
@@ -380,9 +390,11 @@ const resetForm = () => {
 const onUserChange = async (userId: string) => {
   if (!userId) {
     selectedUserBalance.value = null
+    loadingBalance.value = false
     return
   }
 
+  loadingBalance.value = true
   try {
     const apiClient = useApiClient()
     const { data } = await apiClient.get<{ success: boolean, btc_balance: number }>(`/admin/users/${userId}/balance`)
@@ -391,6 +403,8 @@ const onUserChange = async (userId: string) => {
   } catch (error) {
     logger.error('ユーザー残高の取得に失敗しました:', error)
     selectedUserBalance.value = null
+  } finally {
+    loadingBalance.value = false
   }
 }
 
@@ -399,6 +413,20 @@ watch(() => props.modelValue, async (newValue) => {
   if (newValue) {
     // ダイアログが開かれた時に相場レートを取得
     await loadLatestRate()
+
+    // 事前選択されたユーザーIDがある場合、フォームに設定して残高を取得
+    if (props.preselectedUserId) {
+      form.user_id = props.preselectedUserId
+      await onUserChange(props.preselectedUserId)
+    }
+
+    // デフォルト値を設定
+    if (props.defaultTransactionType) {
+      form.transaction_type = props.defaultTransactionType
+    }
+    if (props.defaultReason) {
+      form.reason = props.defaultReason
+    }
   } else {
     resetForm()
   }
