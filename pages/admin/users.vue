@@ -84,6 +84,20 @@
         <template #[`item.actions`]="{ item }">
           <div class="flex items-center space-x-1">
             <v-btn
+              size="small"
+              variant="text"
+              color="success"
+              icon="mdi-cash-plus"
+              @click="openDepositDialog(item)"
+            />
+            <v-btn
+              size="small"
+              variant="text"
+              color="info"
+              icon="mdi-information-outline"
+              @click="openUserDetailsDialog(item)"
+            />
+            <v-btn
               v-if="item.status === 'active'"
               size="small"
               variant="text"
@@ -131,6 +145,22 @@
       :user="selectedUser"
       @reset="handlePasswordReset"
     />
+
+    <!-- Deposit Dialog -->
+    <AdminCreateTransactionDialog
+      v-model="showDepositDialog"
+      :users="users"
+      :preselected-user-id="selectedUserForDeposit?.user_id"
+      default-transaction-type="deposit"
+      default-reason="クレジットボーナス"
+      @created="handleDepositCreated"
+    />
+
+    <!-- User Details Dialog -->
+    <AdminUserDetailsDialog
+      v-model="showUserDetailsDialog"
+      :user="selectedUserForDetails"
+    />
   </div>
 </template>
 
@@ -160,6 +190,10 @@ const searchQuery = ref('')
 const showCreateDialog = ref(false)
 const showResetPasswordDialog = ref(false)
 const selectedUser = ref<User | null>(null)
+const showDepositDialog = ref(false)
+const selectedUserForDeposit = ref<User | null>(null)
+const showUserDetailsDialog = ref(false)
+const selectedUserForDetails = ref<User | null>(null)
 
 // Options
 const statusOptions = [
@@ -176,7 +210,7 @@ const headers = [
   { title: 'ステータス', key: 'status', sortable: true },
   { title: 'プロフィール承認', key: 'profile_approved', sortable: true },
   { title: '作成日', key: 'created_at', sortable: true },
-  { title: 'アクション', key: 'actions', sortable: false, width: 140 }
+  { title: 'アクション', key: 'actions', sortable: false, width: 200 }
 ]
 
 // Computed
@@ -265,6 +299,22 @@ const handleUserCreated = () => {
 const handlePasswordReset = () => {
   showResetPasswordDialog.value = false
   selectedUser.value = null
+}
+
+const openDepositDialog = (user: User) => {
+  selectedUserForDeposit.value = user
+  showDepositDialog.value = true
+}
+
+const handleDepositCreated = () => {
+  showDepositDialog.value = false
+  selectedUserForDeposit.value = null
+  loadUsers()
+}
+
+const openUserDetailsDialog = (user: User) => {
+  selectedUserForDetails.value = user
+  showUserDetailsDialog.value = true
 }
 
 // Utility functions

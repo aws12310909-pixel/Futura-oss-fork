@@ -69,14 +69,14 @@
               ¥{{ formatNumber(item.jpy_value) }}
             </td>
             <td class="px-4 py-3 text-sm text-right">
-              <div v-if="index > 0" class="flex items-center justify-end space-x-1">
+              <div v-if="index < filteredData.length - 1" class="flex items-center justify-end space-x-1">
                 <Icon
-                  :name="getChangeIcon(item, filteredData[index - 1])"
-                  :class="getChangeColor(item, filteredData[index - 1])"
+                  :name="getChangeIcon(item, filteredData[index + 1])"
+                  :class="getChangeColor(item, filteredData[index + 1])"
                   class="text-sm"
                 />
-                <span :class="getChangeColor(item, filteredData[index - 1])">
-                  {{ getChangeText(item, filteredData[index - 1]) }}
+                <span :class="getChangeColor(item, filteredData[index + 1])">
+                  {{ getChangeText(item, filteredData[index + 1]) }}
                 </span>
               </div>
               <div v-else class="text-gray-400 text-xs">
@@ -192,7 +192,15 @@ const formatNumber = (number: number) => {
 
 const getChangeText = (current: BalanceHistoryItem, previous: BalanceHistoryItem) => {
   const diff = current.jpy_value - previous.jpy_value
-  const percentage = previous.jpy_value !== 0 ? (diff / previous.jpy_value) * 100 : 0
+
+  // If previous day value is 0, show absolute change instead of percentage
+  if (previous.jpy_value === 0) {
+    if (diff === 0) return '±0'
+    const sign = diff > 0 ? '+' : ''
+    return `${sign}¥${formatNumber(Math.abs(diff))}`
+  }
+
+  const percentage = (diff / previous.jpy_value) * 100
   const sign = diff >= 0 ? '+' : ''
   return `${sign}${percentage.toFixed(2)}%`
 }
@@ -213,12 +221,28 @@ const getChangeIcon = (current: BalanceHistoryItem, previous: BalanceHistoryItem
 
 const exportToCSV = () => {
   const headers = ['日付', 'BTC残高', 'BTC価格', '資産価値(JPY)', '前日比(%)', '曜日']
-  const rows = props.data.map((item, index) => {
-    const prevItem = index > 0 ? props.data[index - 1] : null
-    const change = prevItem 
-      ? ((item.jpy_value - prevItem.jpy_value) / prevItem.jpy_value * 100).toFixed(2)
-      : '0.00'
-    
+  // Sort data by date descending for CSV export to match table display
+  const sortedData = [...props.data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  const rows = sortedData.map((item, index) => {
+    // Compare with previous day (index + 1 since sorted descending)
+    const prevItem = index < sortedData.length - 1 ? sortedData[index + 1] : null
+
+    let change = '-'
+    if (prevItem) {
+      const diff = item.jpy_value - prevItem.jpy_value
+      if (prevItem.jpy_value === 0) {
+        // Show absolute change if previous value was 0
+        const sign = diff > 0 ? '+' : ''
+        change = diff === 0 ? '±0' : `${sign}${diff.toFixed(0)}`
+      } else {
+        // Show percentage change
+        const percentage = (diff / prevItem.jpy_value * 100).toFixed(2)
+        const sign = diff >= 0 ? '+' : ''
+        change = `${sign}${percentage}`
+      }
+    }
+
     return [
       formatDate(item.date),
       formatBTC(item.btc_amount),
