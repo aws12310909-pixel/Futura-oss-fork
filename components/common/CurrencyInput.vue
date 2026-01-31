@@ -1,56 +1,20 @@
 <template>
   <div class="space-y-2">
     <div class="flex flex-col sm:flex-row gap-2">
-      <v-select
-        v-model="selectedCurrency"
-        :items="currencyOptions"
-        label="入力通貨"
-        variant="outlined"
-        class="w-full sm:w-32 flex-shrink-0"
-        @update:model-value="onCurrencyChange"
-      />
-      
-      <v-text-field
-        v-if="selectedCurrency === 'JPY'"
-        v-model.number="jpyAmount"
-        label="金額（JPY） *"
-        type="number"
-        step="1"
-        variant="outlined"
-        :rules="jpyAmountRules"
-        suffix="JPY"
-        hint="最新の相場レートでBTCに自動換算されます"
-        persistent-hint
-        required
-        class="flex-1"
-        @input="convertJpyToBtc"
-      />
-      
-      <v-text-field
-        v-else
-        v-model.number="btcAmount"
-        label="金額（BTC） *"
-        type="number"
-        step="0.00000001"
-        variant="outlined"
-        :rules="btcAmountRules"
-        suffix="BTC"
-        hint="直接BTCで金額を入力します"
-        persistent-hint
-        required
-        class="flex-1"
-        @input="convertBtcToJpy"
-      />
+      <v-select v-model="selectedCurrency" :items="currencyOptions" label="入力通貨" variant="outlined"
+        class="w-full sm:w-32 flex-shrink-0" @update:model-value="onCurrencyChange" />
+
+      <v-text-field v-if="selectedCurrency === 'JPY'" v-model.number="jpyAmount" label="金額（JPY） *" type="number"
+        step="1" variant="outlined" :rules="jpyAmountRules" suffix="JPY" hint="最新の相場レートでBTCに自動換算されます" persistent-hint
+        required class="flex-1" @input="convertJpyToBtc" />
+
+      <v-text-field v-else v-model.number="btcAmount" label="金額（BTC） *" type="number" step="0.00000001"
+        variant="outlined" :rules="btcAmountRules" suffix="BTC" hint="直接BTCで金額を入力します" persistent-hint required
+        class="flex-1" @input="convertBtcToJpy" />
     </div>
 
     <!-- Rate Loading/Error State -->
-    <v-alert
-      v-if="rateError"
-      type="error"
-      variant="tonal"
-      density="compact"
-      class="mt-2"
-    >
+    <v-alert v-if="rateError" type="error" variant="tonal" density="compact" class="mt-2">
       相場レートの取得に失敗しました。BTCで直接入力してください。
     </v-alert>
   </div>
@@ -128,7 +92,7 @@ const convertJpyToBtc = () => {
     emit('update:modelValue', 0)
     return
   }
-  
+
   const calculatedBtc = jpyAmount.value / latestRate.value.btc_jpy_rate
   btcAmount.value = isNaN(calculatedBtc) ? 0 : calculatedBtc
   emit('update:modelValue', btcAmount.value)
@@ -139,15 +103,10 @@ const convertBtcToJpy = () => {
     jpyAmount.value = 0
     return
   }
-  
+
   const calculatedJpy = Math.round(btcAmount.value * latestRate.value.btc_jpy_rate)
   jpyAmount.value = isNaN(calculatedJpy) ? 0 : calculatedJpy
   emit('update:modelValue', btcAmount.value)
-}
-
-const formatCurrency = (amount: number): string => {
-  if (isNaN(amount)) return '取得中...'
-  return new Intl.NumberFormat('ja-JP').format(amount)
 }
 
 const onCurrencyChange = (currency: 'BTC' | 'JPY') => {

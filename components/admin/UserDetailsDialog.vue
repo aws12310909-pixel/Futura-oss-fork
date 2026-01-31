@@ -1,17 +1,9 @@
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    max-width="900"
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
+  <v-dialog :model-value="modelValue" max-width="900" @update:model-value="$emit('update:modelValue', $event)">
     <v-card v-if="user">
       <v-card-title class="text-lg font-semibold flex items-center justify-between">
         <span>ユーザー詳細</span>
-        <v-chip
-          :color="user.profile_approved ? 'success' : 'warning'"
-          size="small"
-          variant="flat"
-        >
+        <v-chip :color="user.profile_approved ? 'success' : 'warning'" size="small" variant="flat">
           {{ user.profile_approved ? '承認済み' : '承認待ち' }}
         </v-chip>
       </v-card-title>
@@ -36,12 +28,7 @@
               </div>
               <div>
                 <label class="text-sm font-medium text-gray-600">ステータス</label>
-                <v-chip
-                  :color="getStatusColor(user.status)"
-                  size="small"
-                  variant="flat"
-                  class="mt-1"
-                >
+                <v-chip :color="getStatusColor(user.status)" size="small" variant="flat" class="mt-1">
                   {{ getStatusText(user.status) }}
                 </v-chip>
               </div>
@@ -57,28 +44,14 @@
             <h3 class="text-lg font-medium text-gray-900 mb-4">免許証画像</h3>
             <div v-if="user.profile_image_url" class="space-y-4">
               <div class="border rounded-lg p-4 bg-gray-50">
-                <img 
-                  :src="user.profile_image_url" 
-                  :alt="`${user.name}の免許証`"
-                  class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md"
-                  @error="handleImageError"
-                >
+                <img :src="user.profile_image_url" :alt="`${user.name}の免許証`"
+                  class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md" @error="handleImageError">
               </div>
               <div class="flex items-center justify-center space-x-2">
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-fullscreen"
-                  @click="viewFullImage"
-                >
+                <v-btn variant="outlined" size="small" prepend-icon="mdi-fullscreen" @click="viewFullImage">
                   拡大表示
                 </v-btn>
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-download"
-                  @click="downloadImage"
-                >
+                <v-btn variant="outlined" size="small" prepend-icon="mdi-download" @click="downloadImage">
                   ダウンロード
                 </v-btn>
               </div>
@@ -155,19 +128,19 @@
               </div>
               <div class="md:col-span-2" :class="[
                 dashboardData.netProfit > 0 ? 'bg-green-50 border-green-200' :
-                dashboardData.netProfit < 0 ? 'bg-red-50 border-red-200' :
-                'bg-gray-50 border-gray-200',
+                  dashboardData.netProfit < 0 ? 'bg-red-50 border-red-200' :
+                    'bg-gray-50 border-gray-200',
                 'border rounded-lg p-4'
               ]">
                 <label class="text-sm font-medium" :class="[
                   dashboardData.netProfit > 0 ? 'text-green-600' :
-                  dashboardData.netProfit < 0 ? 'text-red-600' :
-                  'text-gray-600'
+                    dashboardData.netProfit < 0 ? 'text-red-600' :
+                      'text-gray-600'
                 ]">純利益</label>
                 <p class="mt-1 text-lg font-bold font-mono" :class="[
                   dashboardData.netProfit > 0 ? 'text-green-900' :
-                  dashboardData.netProfit < 0 ? 'text-red-900' :
-                  'text-gray-900'
+                    dashboardData.netProfit < 0 ? 'text-red-900' :
+                      'text-gray-900'
                 ]">
                   {{ formatBTC(dashboardData.netProfit) }} BTC
                 </p>
@@ -184,10 +157,7 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn
-          variant="text"
-          @click="$emit('update:modelValue', false)"
-        >
+        <v-btn variant="text" @click="$emit('update:modelValue', false)">
           閉じる
         </v-btn>
       </v-card-actions>
@@ -197,6 +167,7 @@
 
 <script setup lang="ts">
 import type { User, DashboardData } from '~/types'
+import { formatNumber, formatBTC } from '~/utils/format'
 
 // Props & Emits
 const props = defineProps<{
@@ -280,14 +251,6 @@ const formatDate = (dateString: string) => {
     hour: '2-digit',
     minute: '2-digit'
   })
-}
-
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
-
-const formatNumber = (number: number) => {
-  return number.toLocaleString('ja-JP')
 }
 
 // Watch for dialog open/close

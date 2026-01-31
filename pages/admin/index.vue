@@ -6,12 +6,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">管理者ダッシュボード</h1>
         <p class="text-gray-600">システム全体の管理機能にアクセスできます</p>
       </div>
-      <v-btn
-        variant="outlined"
-        prepend-icon="mdi-refresh"
-        :loading="loading"
-        @click="loadDashboardData"
-      >
+      <v-btn variant="outlined" prepend-icon="mdi-refresh" :loading="loading" @click="loadDashboardData">
         更新
       </v-btn>
     </div>
@@ -38,11 +33,8 @@
         </v-card-title>
         <v-card-text class="p-6">
           <div v-if="dashboardData?.recentTransactionRequests.length" class="space-y-4">
-            <div
-              v-for="request in dashboardData.recentTransactionRequests"
-              :key="request.transaction_id"
-              class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-            >
+            <div v-for="request in dashboardData.recentTransactionRequests" :key="request.transaction_id"
+              class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
               <div class="flex-1">
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="text-sm font-medium text-gray-900">{{ request.user_name }}</span>
@@ -85,11 +77,8 @@
         </v-card-title>
         <v-card-text class="p-6">
           <div v-if="dashboardData?.pendingUsers.length" class="space-y-4">
-            <div
-              v-for="user in dashboardData.pendingUsers"
-              :key="user.user_id"
-              class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-            >
+            <div v-for="user in dashboardData.pendingUsers" :key="user.user_id"
+              class="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
               <div class="flex-1">
                 <div class="flex items-center space-x-2 mb-1">
                   <span class="text-sm font-medium text-gray-900">{{ user.name }}</span>
@@ -122,12 +111,9 @@
           システム管理
         </v-card-title>
         <v-card-text class="space-y-3">
-          <div
-            v-for="item in managementItems"
-            :key="item.to"
+          <div v-for="item in managementItems" :key="item.to"
             class="flex items-center p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
-            @click="navigateTo(item.to)"
-          >
+            @click="navigateTo(item.to)">
             <div class="p-2 rounded-lg" :class="item.bgColor">
               <Icon :name="item.icon" class="text-xl" :class="item.iconColor" />
             </div>
@@ -152,13 +138,11 @@
             <p class="text-gray-500">アクティビティがありません</p>
           </div>
           <div v-else class="space-y-3">
-            <div
-              v-for="activity in dashboardData.recentActivities"
-              :key="activity.id"
-              class="flex items-start space-x-3 p-3 border rounded-lg"
-            >
+            <div v-for="activity in dashboardData.recentActivities" :key="activity.id"
+              class="flex items-start space-x-3 p-3 border rounded-lg">
               <div class="p-2 rounded-lg" :class="getActivityStyle(activity.type).bgColor">
-                <Icon :name="getActivityStyle(activity.type).icon" class="text-sm" :class="getActivityStyle(activity.type).iconColor" />
+                <Icon :name="getActivityStyle(activity.type).icon" class="text-sm"
+                  :class="getActivityStyle(activity.type).iconColor" />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm text-gray-900">{{ activity.message }}</p>
@@ -193,7 +177,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <h4 class="text-sm font-medium text-gray-900 mb-1">Cognito → DynamoDB 同期</h4>
@@ -201,17 +185,12 @@
                 Cognitoユーザープールからユーザーと権限情報をDynamoDBに同期します
               </p>
             </div>
-            <v-btn
-              color="primary"
-              variant="outlined"
-              prepend-icon="mdi-sync"
-              :loading="syncLoading"
-              @click="syncCognitoData"
-            >
+            <v-btn color="primary" variant="outlined" prepend-icon="mdi-sync" :loading="syncLoading"
+              @click="syncCognitoData">
               同期実行
             </v-btn>
           </div>
-          
+
           <!-- Sync Results -->
           <div v-if="syncResults" class="p-4 border rounded-lg bg-green-50">
             <div class="flex items-start">
@@ -232,6 +211,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatBTC } from '~/utils/format'
 import type { AdminDashboardData } from '~/types'
 
 // Page meta
@@ -325,10 +305,10 @@ const loadDashboardData = async () => {
   loading.value = true
   try {
     logger.info('管理者ダッシュボードデータの読み込み開始')
-    
+
     // 新しい統合されたダッシュボードAPIエンドポイントを呼び出し
     const response = await apiClient.get<AdminDashboardData>('/admin/dashboard')
-    
+
     dashboardData.value = response.data!
     logger.info('管理者ダッシュボードデータの読み込み完了:', {
       stats: response.data!.stats,
@@ -358,10 +338,10 @@ const loadDashboardData = async () => {
 const syncCognitoData = async () => {
   syncLoading.value = true
   syncResults.value = null
-  
+
   try {
     logger.info('Cognito同期開始')
-    
+
     const response = await apiClient.post<{
       syncResults: {
         users: { synced: number; errors: number }
@@ -369,11 +349,11 @@ const syncCognitoData = async () => {
       }
       message: string
     }>('/admin/system/sync-cognito')
-    
+
     syncResults.value = response.data!.syncResults
     showSuccess(response.data!.message)
     logger.info('Cognito同期完了:', response.data!.syncResults)
-    
+
     // 同期後にダッシュボードデータを再読み込み
     await loadDashboardData()
   } catch (error) {
@@ -384,10 +364,6 @@ const syncCognitoData = async () => {
   }
 }
 
-// Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('ja-JP', {
