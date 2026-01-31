@@ -61,37 +61,13 @@
     <v-card class="mb-6">
       <v-card-text class="py-4">
         <div class="flex items-center space-x-4 flex-wrap gap-y-2">
-          <v-select
-            v-model="selectedTransactionType"
-            :items="transactionTypeOptions"
-            label="取引種別"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-select
-            v-model="selectedStatus"
-            :items="statusOptions"
-            label="承認状態"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-text-field
-            v-model="searchQuery"
-            label="検索（メモ）"
-            prepend-inner-icon="mdi-magnify"
-            variant="outlined"
-            density="compact"
-            clearable
-            class="w-64"
-          />
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-refresh"
-            :loading="loading"
-            @click="loadTransactions"
-          >
+          <v-select v-model="selectedTransactionType" :items="transactionTypeOptions" label="取引種別" variant="outlined"
+            density="compact" class="w-48" />
+          <v-select v-model="selectedStatus" :items="statusOptions" label="承認状態" variant="outlined" density="compact"
+            class="w-48" />
+          <v-text-field v-model="searchQuery" label="検索（メモ）" prepend-inner-icon="mdi-magnify" variant="outlined"
+            density="compact" clearable class="w-64" />
+          <v-btn variant="outlined" prepend-icon="mdi-refresh" :loading="loading" @click="loadTransactions">
             更新
           </v-btn>
         </div>
@@ -100,37 +76,18 @@
 
     <!-- Transactions Table -->
     <v-card>
-      <v-data-table
-        :headers="headers"
-        :items="filteredTransactions"
-        :loading="loading"
-        :items-per-page="20"
-        class="elevation-0"
-        no-data-text="取引履歴がありません"
-        loading-text="読み込み中..."
-      >
+      <v-data-table :headers="headers" :items="filteredTransactions" :loading="loading" :items-per-page="20"
+        class="elevation-0" no-data-text="取引履歴がありません" loading-text="読み込み中...">
         <template #[`item.transaction_type`]="{ item }">
           <div class="flex gap-1.5">
-            <v-chip
-              :color="getTransactionTypeColor(item)"
-              size="small"
-              variant="flat"
-              class="justify-start"
-            >
-              <Icon
-                :name="getTransactionTypeIcon(item.transaction_type)"
-                class="mr-1.5 w-3.5 h-3.5"
-              />
+            <v-chip :color="getTransactionTypeColor(item)" size="small" variant="flat" class="justify-start">
+              <Icon :name="getTransactionTypeIcon(item.transaction_type)" class="mr-1.5 w-3.5 h-3.5" />
               {{ getTransactionTypeLabel(item.transaction_type) }}
             </v-chip>
             <v-tooltip location="top">
               <template #activator="{ props }">
-                <Icon
-                  v-bind="props"
-                  :name="getStatusIcon(item.status)"
-                  :class="getStatusIconClass(item.status)"
-                  class="w-5 h-5 cursor-help"
-                />
+                <Icon v-bind="props" :name="getStatusIcon(item.status)" :class="getStatusIconClass(item.status)"
+                  class="w-5 h-5 cursor-help" />
               </template>
               <span>{{ getStatusText(item.status) }}</span>
             </v-tooltip>
@@ -138,10 +95,7 @@
         </template>
 
         <template #[`item.amount`]="{ item }">
-          <span
-            class="font-mono font-semibold text-lg"
-            :class="getTransactionTypeTextColor(item.transaction_type)"
-          >
+          <span class="font-mono font-semibold text-lg" :class="getTransactionTypeTextColor(item.transaction_type)">
             {{ getTransactionTypeSign(item.transaction_type, item.amount) }}{{ formatBTC(Math.abs(item.amount)) }} BTC
           </span>
         </template>
@@ -164,35 +118,27 @@
         </template>
 
         <template #[`item.actions`]="{ item }">
-          <v-btn
-            size="small"
-            variant="text"
-            color="info"
-                          icon="mdi-eye"
-            @click="viewTransactionDetails(item)"
-          />
+          <v-btn size="small" variant="text" color="info" icon="mdi-eye" @click="viewTransactionDetails(item)" />
         </template>
       </v-data-table>
     </v-card>
 
     <!-- Transaction Details Dialog -->
-    <UserTransactionDetailsDialog
-      v-model="showDetailsDialog"
-      :transaction="selectedTransaction"
-    />
+    <UserTransactionDetailsDialog v-model="showDetailsDialog" :transaction="selectedTransaction" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Transaction } from '~/types'
-import { 
-  getTransactionTypeLabel, 
+import {
+  getTransactionTypeLabel,
   getTransactionTypeColor as getTransactionTypeColorUtil,
   getTransactionTypeIcon,
   getTransactionTypeTextColor,
   getTransactionTypeSign,
   getTransactionTypeVuetifyColor
 } from '~/utils/transaction'
+import { formatBTC } from '~/utils/format'
 
 const logger = useLogger({ prefix: '[PAGE-TRANSACTIONS]' })
 const apiClient = useApiClient()
@@ -262,7 +208,7 @@ const filteredTransactions = computed(() => {
   // Filter by search query (memo field)
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(t => 
+    filtered = filtered.filter(t =>
       t.memo.toLowerCase().includes(query) ||
       t.reason.toLowerCase().includes(query)
     )
@@ -278,13 +224,13 @@ const isApprovedTransaction = (transaction: Transaction): boolean => {
 
 const totalTransactions = computed(() => transactions.value.length)
 
-const totalDeposits = computed(() => 
+const totalDeposits = computed(() =>
   transactions.value
     .filter(t => t.transaction_type === 'deposit')
     .reduce((sum, t) => sum + t.amount, 0)
 )
 
-const totalWithdrawals = computed(() => 
+const totalWithdrawals = computed(() =>
   transactions.value
     .filter(t => t.transaction_type === 'withdrawal')
     .reduce((sum, t) => sum + t.amount, 0)
@@ -295,13 +241,13 @@ const approvedTransactionCount = computed(() => {
   return transactions.value.filter(t => isApprovedTransaction(t)).length
 })
 
-const approvedDeposits = computed(() => 
+const approvedDeposits = computed(() =>
   transactions.value
     .filter(t => t.transaction_type === 'deposit' && isApprovedTransaction(t))
     .reduce((sum, t) => sum + t.amount, 0)
 )
 
-const approvedWithdrawals = computed(() => 
+const approvedWithdrawals = computed(() =>
   transactions.value
     .filter(t => t.transaction_type === 'withdrawal' && isApprovedTransaction(t))
     .reduce((sum, t) => sum + t.amount, 0)
@@ -322,7 +268,7 @@ const loadTransactions = async () => {
       `/transactions?user_id=${user.value.user_id}`
     )
     logger.debug('APIレスポンス:', response)
-    
+
     if (response.success && response.data && response.data.items) {
       transactions.value = response.data.items
       logger.info(`取引履歴を${response.data.items.length}件読み込みました`)
@@ -332,7 +278,7 @@ const loadTransactions = async () => {
     }
   } catch (error: any) {
     logger.error('取引履歴の読み込みに失敗しました:', error)
-    
+
     // 詳細なエラー情報を表示
     let errorMessage = '取引履歴の取得に失敗しました'
     if (error?.statusCode === 401) {
@@ -344,7 +290,7 @@ const loadTransactions = async () => {
     } else if (error?.data?.message) {
       errorMessage = `エラー: ${error.data.message}`
     }
-    
+
     showError(errorMessage)
   } finally {
     loading.value = false
@@ -356,7 +302,7 @@ const getRunningBalance = (index: number) => {
   // Note: transactions are sorted by timestamp descending, so we need to reverse the calculation
   const reversedIndex = filteredTransactions.value.length - 1 - index
   let balance = 0
-  
+
   for (let i = filteredTransactions.value.length - 1; i >= reversedIndex; i--) {
     const transaction = filteredTransactions.value[i]
     if (transaction.transaction_type === 'deposit') {
@@ -367,7 +313,7 @@ const getRunningBalance = (index: number) => {
       balance += transaction.amount
     }
   }
-  
+
   return balance
 }
 
@@ -377,10 +323,6 @@ const viewTransactionDetails = (transaction: Transaction) => {
 }
 
 // Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
-
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('ja-JP', {
     year: 'numeric',

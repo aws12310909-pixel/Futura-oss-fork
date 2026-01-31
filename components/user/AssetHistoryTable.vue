@@ -4,22 +4,9 @@
     <div class="flex items-center justify-between p-4 border-b">
       <h3 class="text-lg font-semibold text-gray-900">資産推移詳細</h3>
       <div class="flex items-center space-x-2">
-        <v-select
-          v-model="dateRange"
-          :items="dateRangeOptions"
-          item-title="label"
-          item-value="value"
-          variant="outlined"
-          density="compact"
-          class="w-32"
-          hide-details
-        />
-        <v-btn
-          variant="outlined"
-          size="small"
-          prepend-icon="mdi-download"
-          @click="exportToCSV"
-        >
+        <v-select v-model="dateRange" :items="dateRangeOptions" item-title="label" item-value="value" variant="outlined"
+          density="compact" class="w-32" hide-details />
+        <v-btn variant="outlined" size="small" prepend-icon="mdi-download" @click="exportToCSV">
           CSV出力
         </v-btn>
       </div>
@@ -48,11 +35,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr
-            v-for="(item, index) in filteredData"
-            :key="item.date"
-            class="hover:bg-gray-50"
-          >
+          <tr v-for="(item, index) in filteredData" :key="item.date" class="hover:bg-gray-50">
             <td class="px-4 py-3 text-sm text-gray-900">
               <div>
                 <div class="font-medium">{{ formatDate(item.date) }}</div>
@@ -70,11 +53,8 @@
             </td>
             <td class="px-4 py-3 text-sm text-right">
               <div v-if="index < filteredData.length - 1" class="flex items-center justify-end space-x-1">
-                <Icon
-                  :name="getChangeIcon(item, filteredData[index + 1])"
-                  :class="getChangeColor(item, filteredData[index + 1])"
-                  class="text-sm"
-                />
+                <Icon :name="getChangeIcon(item, filteredData[index + 1])"
+                  :class="getChangeColor(item, filteredData[index + 1])" class="text-sm" />
                 <span :class="getChangeColor(item, filteredData[index + 1])">
                   {{ getChangeText(item, filteredData[index + 1]) }}
                 </span>
@@ -92,27 +72,17 @@
     <div v-if="data.length > itemsPerPage" class="p-4 border-t">
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-700">
-          {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredData.length) }} 
+          {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredData.length) }}
           of {{ filteredData.length }} 件を表示
         </div>
         <div class="flex items-center space-x-2">
-          <v-btn
-            variant="outlined"
-            size="small"
-            :disabled="currentPage === 1"
-            @click="currentPage--"
-          >
+          <v-btn variant="outlined" size="small" :disabled="currentPage === 1" @click="currentPage--">
             前へ
           </v-btn>
           <span class="text-sm text-gray-700">
             {{ currentPage }} / {{ totalPages }}
           </span>
-          <v-btn
-            variant="outlined"
-            size="small"
-            :disabled="currentPage === totalPages"
-            @click="currentPage++"
-          >
+          <v-btn variant="outlined" size="small" :disabled="currentPage === totalPages" @click="currentPage++">
             次へ
           </v-btn>
         </div>
@@ -123,6 +93,7 @@
 
 <script setup lang="ts">
 import type { BalanceHistoryItem } from '~/types'
+import { formatNumber, formatBTC } from '~/utils/format'
 
 interface Props {
   data: BalanceHistoryItem[]
@@ -145,15 +116,15 @@ const dateRangeOptions = [
 // Computed
 const filteredData = computed(() => {
   let filtered = [...props.data]
-  
+
   if (dateRange.value !== 'all') {
     const days = parseInt(dateRange.value)
     filtered = filtered.slice(-days)
   }
-  
+
   // Sort by date ascending for table display
   filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  
+
   // Apply pagination
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -161,8 +132,8 @@ const filteredData = computed(() => {
 })
 
 const totalPages = computed(() => {
-  const totalItems = dateRange.value === 'all' 
-    ? props.data.length 
+  const totalItems = dateRange.value === 'all'
+    ? props.data.length
     : Math.min(props.data.length, parseInt(dateRange.value))
   return Math.ceil(totalItems / itemsPerPage)
 })
@@ -180,14 +151,6 @@ const formatDayOfWeek = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('ja-JP', {
     weekday: 'short'
   })
-}
-
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
-
-const formatNumber = (number: number) => {
-  return number.toLocaleString('ja-JP')
 }
 
 const getChangeText = (current: BalanceHistoryItem, previous: BalanceHistoryItem) => {

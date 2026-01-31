@@ -9,17 +9,13 @@
         <div class="flex items-center gap-2">
           <button
             class="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 text-secondary-600 hover:text-secondary-800 hover:bg-secondary-100 rounded-lg transition-all duration-200"
-            title="更新"
-            @click="loadRequests"
-          >
+            title="更新" @click="loadRequests">
             <Icon name="mdi:refresh" class="text-xl sm:mr-2" />
             <span class="hidden sm:inline">更新</span>
           </button>
           <button
             class="flex items-center justify-center px-4 py-2 sm:px-6 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:bg-secondary-400 disabled:cursor-not-allowed transition-all duration-200 font-medium whitespace-nowrap"
-            :disabled="hasPendingRequest"
-            @click="showRequestDialog = true"
-          >
+            :disabled="hasPendingRequest" @click="showRequestDialog = true">
             <Icon name="mdi:plus" class="text-lg sm:mr-2" />
             <span class="hidden sm:inline">新しいリクエスト</span>
             <span class="sm:hidden">新規</span>
@@ -69,26 +65,12 @@
       <v-card-text class="py-4">
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <div class="flex flex-col sm:flex-row gap-4">
-            <v-select
-              v-model="selectedTransactionType"
-              :items="transactionTypeOptions"
-              label="取引種別"
-              variant="outlined"
-              density="compact"
-              class="w-full sm:w-48"
-              @update:model-value="filterRequests"
-            />
-            <v-select
-              v-model="selectedStatus"
-              :items="statusOptions"
-              label="ステータス"
-              variant="outlined"
-              density="compact"
-              class="w-full sm:w-48"
-              @update:model-value="filterRequests"
-            />
+            <v-select v-model="selectedTransactionType" :items="transactionTypeOptions" label="取引種別" variant="outlined"
+              density="compact" class="w-full sm:w-48" @update:model-value="filterRequests" />
+            <v-select v-model="selectedStatus" :items="statusOptions" label="ステータス" variant="outlined" density="compact"
+              class="w-full sm:w-48" @update:model-value="filterRequests" />
           </div>
-          <div class="sm:flex-1"/>
+          <div class="sm:flex-1" />
           <div class="text-sm text-secondary-500 text-center sm:text-right">
             {{ totalCount }}件中 {{ requests.length }}件を表示
           </div>
@@ -102,7 +84,7 @@
         <div v-if="loading" class="flex items-center justify-center py-12">
           <v-progress-circular indeterminate color="primary" />
         </div>
-        
+
         <div v-else-if="requests.length === 0" class="text-center py-12">
           <Icon name="mdi:inbox" class="text-4xl text-gray-400 mb-4" />
           <p class="text-gray-500">
@@ -138,19 +120,12 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr
-                v-for="request in requests"
-                :key="request.transaction_id"
-                class="hover:bg-gray-50"
-              >
+              <tr v-for="request in requests" :key="request.transaction_id" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="request.transaction_type === 'deposit'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'"
-                    >
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="request.transaction_type === 'deposit'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'">
                       {{ getTransactionTypeLabel(request.transaction_type) }}
                     </span>
                   </div>
@@ -169,7 +144,8 @@
                   <div v-if="request.memo" class="text-sm text-gray-500 max-w-xs mt-1">
                     メモ: {{ request.memo }}
                   </div>
-                  <div v-if="request.status === 'rejected' && request.rejection_reason" class="text-sm text-red-600 max-w-xs mt-1">
+                  <div v-if="request.status === 'rejected' && request.rejection_reason"
+                    class="text-sm text-red-600 max-w-xs mt-1">
                     拒否理由: {{ request.rejection_reason }}
                   </div>
                 </td>
@@ -202,9 +178,7 @@
       <div class="flex items-center gap-2 sm:gap-4">
         <button
           class="px-3 py-2 text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          :disabled="page <= 1"
-          @click="changePage(page - 1)"
-        >
+          :disabled="page <= 1" @click="changePage(page - 1)">
           <Icon name="mdi:chevron-left" class="sm:hidden" />
           <span class="hidden sm:inline">前へ</span>
         </button>
@@ -213,9 +187,7 @@
         </span>
         <button
           class="px-3 py-2 text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          :disabled="!hasMore"
-          @click="changePage(page + 1)"
-        >
+          :disabled="!hasMore" @click="changePage(page + 1)">
           <Icon name="mdi:chevron-right" class="sm:hidden" />
           <span class="hidden sm:inline">次へ</span>
         </button>
@@ -223,10 +195,7 @@
     </div>
 
     <!-- Request Dialog -->
-    <UserTransactionRequestDialog
-      v-model="showRequestDialog"
-      @request-created="onRequestCreated"
-    />
+    <UserTransactionRequestDialog v-model="showRequestDialog" @request-created="onRequestCreated" />
   </div>
 </template>
 
@@ -235,6 +204,7 @@ import { ref, computed, onMounted } from 'vue'
 import type { Transaction } from '~/types'
 import { TRANSACTION_STATUS } from '~/types'
 import { getTransactionTypeLabel, getTransactionTypeColor } from '~/utils/transaction'
+import { formatBTC } from '~/utils/format'
 
 definePageMeta({
   middleware: 'auth'
@@ -244,7 +214,7 @@ const logger = useLogger({ prefix: '[USER-TRANSACTION-REQUESTS]' })
 const apiClient = useApiClient()
 
 useHead({
-      title: '入出金リクエスト - M・S CFD App'
+  title: '入出金リクエスト - M・S CFD App'
 })
 
 // State
@@ -334,21 +304,6 @@ const onRequestCreated = (data: any) => {
   loadRequests()
 }
 
-// Utility functions
-const formatBTC = (amount: number, transactionType?: string) => {
-  const formattedAmount = amount.toFixed(8)
-  if (transactionType === 'deposit') {
-    return `+${formattedAmount}`
-  } else if (transactionType === 'withdrawal') {
-    return `${formattedAmount}`
-  }
-  return formattedAmount
-}
-
-const formatCurrency = (value: number) => {
-  return Math.round(value).toLocaleString('ja-JP')
-}
-
 const formatDateTime = (dateString: string) => {
   return new Date(dateString).toLocaleString('ja-JP', {
     year: 'numeric',
@@ -372,7 +327,7 @@ const getTransactionTypeText = (type: string) => {
 const getEmptyMessage = () => {
   const typeText = selectedTransactionType.value === 'all' ? '' : getTransactionTypeText(selectedTransactionType.value)
   const statusText = selectedStatus.value === 'all' ? '' : getStatusText(selectedStatus.value)
-  
+
   if (selectedTransactionType.value === 'all' && selectedStatus.value === 'all') {
     return 'リクエスト履歴がありません'
   } else if (selectedTransactionType.value === 'all') {

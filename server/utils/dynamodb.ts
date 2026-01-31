@@ -84,23 +84,39 @@ class DynamoDBService {
     expressionAttributeNames?: Record<string, string>
     limit?: number
     scanIndexForward?: boolean
+    exclusiveStartKey?: Record<string, any>
+    fetchAll?: boolean
   }) {
-    const command = new QueryCommand({
-      TableName: tableName,
-      KeyConditionExpression: keyConditionExpression,
-      ExpressionAttributeValues: expressionAttributeValues,
-      IndexName: options?.indexName,
-      FilterExpression: options?.filterExpression,
-      ExpressionAttributeNames: options?.expressionAttributeNames,
-      Limit: options?.limit,
-      ScanIndexForward: options?.scanIndexForward
-    })
-    
-    const response = await this.client.send(command)
+    const fetchAll = options?.fetchAll ?? true
+    let items: any[] = []
+    let lastEvaluatedKey = options?.exclusiveStartKey
+    let count = 0
+
+    do {
+      const command: QueryCommand = new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: keyConditionExpression,
+        ExpressionAttributeValues: expressionAttributeValues,
+        IndexName: options?.indexName,
+        FilterExpression: options?.filterExpression,
+        ExpressionAttributeNames: options?.expressionAttributeNames,
+        Limit: options?.limit,
+        ScanIndexForward: options?.scanIndexForward,
+        ExclusiveStartKey: lastEvaluatedKey
+      })
+
+      const response = await this.client.send(command)
+      items = items.concat(response.Items || [])
+      lastEvaluatedKey = response.LastEvaluatedKey
+      count += response.Count || 0
+
+      // fetchAll が false の場合、または lastEvaluatedKey がなくなった場合は終了
+    } while (fetchAll && lastEvaluatedKey)
+
     return {
-      items: response.Items || [],
-      lastEvaluatedKey: response.LastEvaluatedKey,
-      count: response.Count || 0
+      items,
+      lastEvaluatedKey,
+      count
     }
   }
 
@@ -110,26 +126,40 @@ class DynamoDBService {
     expressionAttributeNames?: Record<string, string>
     limit?: number
     select?: 'ALL_ATTRIBUTES' | 'ALL_PROJECTED_ATTRIBUTES' | 'SPECIFIC_ATTRIBUTES' | 'COUNT'
+    exclusiveStartKey?: Record<string, any>
+    fetchAll?: boolean
   }) {
     logger.debug(`Scanコマンド実行: テーブル=${tableName}, Select=${options?.select || 'ALL_ATTRIBUTES'}`)
+    const fetchAll = options?.fetchAll ?? true
+    let items: any[] = []
+    let lastEvaluatedKey = options?.exclusiveStartKey
+    let count = 0
 
     try {
-      const command = new ScanCommand({
-        TableName: tableName,
-        FilterExpression: options?.filterExpression,
-        ExpressionAttributeValues: options?.expressionAttributeValues,
-        ExpressionAttributeNames: options?.expressionAttributeNames,
-        Limit: options?.limit,
-        Select: options?.select
-      })
+      do {
+        const command: ScanCommand = new ScanCommand({
+          TableName: tableName,
+          FilterExpression: options?.filterExpression,
+          ExpressionAttributeValues: options?.expressionAttributeValues,
+          ExpressionAttributeNames: options?.expressionAttributeNames,
+          Limit: options?.limit,
+          Select: options?.select,
+          ExclusiveStartKey: lastEvaluatedKey
+        })
 
-      const response = await this.client.send(command)
-      logger.debug(`Scan完了: テーブル=${tableName}, レコード数=${response.Count || 0}`)
+        const response = await this.client.send(command)
+        items = items.concat(response.Items || [])
+        lastEvaluatedKey = response.LastEvaluatedKey
+        count += response.Count || 0
+
+      } while (fetchAll && lastEvaluatedKey)
+
+      logger.debug(`Scan完了: テーブル=${tableName}, 合計取得レコード数=${count}`)
 
       return {
-        items: response.Items || [],
-        lastEvaluatedKey: response.LastEvaluatedKey,
-        count: response.Count || 0
+        items,
+        lastEvaluatedKey,
+        count
       }
     } catch (error) {
       logger.error(`Scanエラー: テーブル=${tableName}`, error)

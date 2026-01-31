@@ -1,10 +1,6 @@
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    max-width="500"
-    persistent
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
+  <v-dialog :model-value="modelValue" max-width="500" persistent
+    @update:model-value="$emit('update:modelValue', $event)">
     <v-card>
       <v-card-title class="text-lg font-semibold text-red-700">
         {{ props.request.transaction_type === 'deposit' ? '入金' : '出金' }}リクエストを拒否
@@ -37,45 +33,25 @@
 
           <!-- Rejection Form -->
           <v-form ref="formRef" @submit.prevent="rejectRequest">
-            <v-textarea
-              v-model="rejectionReason"
-              label="拒否理由 *"
-              variant="outlined"
-              rows="4"
-              :rules="reasonRules"
-              required
-              maxlength="500"
-              counter
-              hint="ユーザーに表示される拒否理由を入力してください"
-              persistent-hint
-            />
+            <v-textarea v-model="rejectionReason" label="拒否理由 *" variant="outlined" rows="4" :rules="reasonRules"
+              required maxlength="500" counter hint="ユーザーに表示される拒否理由を入力してください" persistent-hint />
           </v-form>
 
           <!-- Warning -->
-          <v-alert 
-            color="warning" 
-            variant="tonal"
-            class="text-sm"
-          >
+          <v-alert color="warning" variant="tonal" class="text-sm">
             この操作は取り消せません。拒否後はユーザーに通知され、新しいリクエストの送信が可能になります。
           </v-alert>
         </div>
       </v-card-text>
 
       <v-card-actions class="flex justify-end gap-2 px-6 pb-6">
-        <button
-          type="button"
-          class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          @click="$emit('update:modelValue', false)"
-        >
+        <button type="button" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          @click="$emit('update:modelValue', false)">
           キャンセル
         </button>
-        <button
-          type="button"
+        <button type="button"
           class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          :disabled="loading"
-          @click="rejectRequest"
-        >
+          :disabled="loading" @click="rejectRequest">
           <span v-if="loading">拒否中...</span>
           <span v-else>拒否する</span>
         </button>
@@ -87,6 +63,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { TRANSACTION_STATUS } from '~/types'
+import { formatBTC } from '~/utils/format'
 
 const apiClient = useApiClient()
 
@@ -126,18 +103,18 @@ const rejectRequest = async () => {
   if (!valid) return
 
   loading.value = true
-  
+
   try {
     const response = await apiClient.patch(`/admin/transactions/${props.request.transaction_id}/status`, {
       status: TRANSACTION_STATUS.REJECTED,
       rejection_reason: rejectionReason.value
     })
 
-            useNotification().showSuccess(`${props.request.user_name}さんの${props.request.transaction_type === 'deposit' ? '入金' : '出金'}リクエストを拒否しました`)
-    
+    useNotification().showSuccess(`${props.request.user_name}さんの${props.request.transaction_type === 'deposit' ? '入金' : '出金'}リクエストを拒否しました`)
+
     emit('request-processed')
     emit('update:modelValue', false)
-    
+
   } catch (error: any) {
     useNotification().showError(error?.data?.message || '拒否処理に失敗しました')
   } finally {
@@ -145,8 +122,4 @@ const rejectRequest = async () => {
   }
 }
 
-// Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
 </script>

@@ -5,12 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">ダッシュボード</h1>
         <p class="text-gray-600">BTCポートフォリオの概要</p>
       </div>
-      <v-btn
-        variant="outlined"
-                  prepend-icon="mdi-refresh"
-        :loading="loading"
-        @click="loadDashboardData"
-      >
+      <v-btn variant="outlined" prepend-icon="mdi-refresh" :loading="loading" @click="loadDashboardData">
         更新
       </v-btn>
     </div>
@@ -23,12 +18,7 @@
           <div class="flex items-center justify-between w-full">
             <h3 class="text-lg font-semibold text-gray-900">BTC保有量推移（30日間）</h3>
             <div class="flex items-center space-x-2">
-              <v-btn-toggle
-                v-model="assetViewMode"
-                variant="outlined"
-                density="compact"
-                mandatory
-              >
+              <v-btn-toggle v-model="assetViewMode" variant="outlined" density="compact" mandatory>
                 <v-btn value="chart" size="small">
                   <Icon name="mdi:chart-line" class="mr-1" />
                   チャート
@@ -111,11 +101,9 @@
           </div>
           <!-- Request Button -->
           <div class="mt-4">
-            <NuxtLink
-              to="/transaction-requests"
+            <NuxtLink to="/transaction-requests"
               class="block w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-center"
-              :class="{ 'bg-gray-400 cursor-not-allowed': hasPermission('transaction:request') === false }"
-            >
+              :class="{ 'bg-gray-400 cursor-not-allowed': hasPermission('transaction:request') === false }">
               入出金リクエスト
             </NuxtLink>
           </div>
@@ -215,21 +203,11 @@
         </v-card-title>
         <v-card-text class="p-6">
           <div v-if="dashboardData?.recentTransactions.length" class="space-y-4">
-            <div
-              v-for="transaction in dashboardData.recentTransactions"
-              :key="transaction.transaction_id"
-              class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
-            >
+            <div v-for="transaction in dashboardData.recentTransactions" :key="transaction.transaction_id"
+              class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
               <div class="flex items-center space-x-3">
-                <v-chip
-                  :color="getTransactionTypeColor(transaction.transaction_type)"
-                  size="small"
-                  variant="flat"
-                >
-                  <Icon
-                    :name="getTransactionTypeIcon(transaction.transaction_type)"
-                    class="mr-1"
-                  />
+                <v-chip :color="getTransactionTypeColor(transaction.transaction_type)" size="small" variant="flat">
+                  <Icon :name="getTransactionTypeIcon(transaction.transaction_type)" class="mr-1" />
                   {{ getTransactionTypeLabel(transaction.transaction_type) }}
                 </v-chip>
                 <div>
@@ -239,11 +217,9 @@
                 </div>
               </div>
               <div class="text-right">
-                <p
-                  class="font-mono font-semibold"
-                  :class="getTransactionTypeTextColor(transaction.transaction_type)"
-                >
-                  {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{ formatBTC(Math.abs(transaction.amount)) }} BTC
+                <p class="font-mono font-semibold" :class="getTransactionTypeTextColor(transaction.transaction_type)">
+                  {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{
+                    formatBTC(Math.abs(transaction.amount)) }} BTC
                 </p>
               </div>
             </div>
@@ -262,13 +238,14 @@
 
 <script setup lang="ts">
 import type { DashboardData, MarketRate } from '~/types'
-import { 
-  getTransactionTypeLabel, 
-  getTransactionTypeColor, 
-  getTransactionTypeIcon, 
-  getTransactionTypeTextColor, 
-  getTransactionTypeSign 
+import {
+  getTransactionTypeLabel,
+  getTransactionTypeColor,
+  getTransactionTypeIcon,
+  getTransactionTypeTextColor,
+  getTransactionTypeSign
 } from '~/utils/transaction'
+import { formatNumber, formatBTC } from '~/utils/format'
 
 const logger = useLogger({ prefix: '[PAGE-DASHBOARD]' })
 
@@ -300,13 +277,13 @@ const valueChangeText = computed(() => {
   if (!dashboardData.value?.balanceHistory.length || dashboardData.value.balanceHistory.length < 2) {
     return '+0.00%'
   }
-  
+
   const history = dashboardData.value.balanceHistory
   const current = history[history.length - 1].btc_amount
   const previous = history[history.length - 2].btc_amount
-  
+
   if (previous === 0) return '+0.00%'
-  
+
   const change = ((current - previous) / previous) * 100
   const sign = change >= 0 ? '+' : ''
   return `${sign}${change.toFixed(2)}%`
@@ -321,12 +298,12 @@ const valueChangeClass = computed(() => {
 
 const monthlyTransactionCount = computed(() => {
   if (!dashboardData.value?.recentTransactions.length) return 0
-  
+
   const thisMonth = new Date()
   thisMonth.setDate(1)
   thisMonth.setHours(0, 0, 0, 0)
-  
-  return dashboardData.value.recentTransactions.filter(t => 
+
+  return dashboardData.value.recentTransactions.filter(t =>
     new Date(t.timestamp) >= thisMonth
   ).length
 })
@@ -336,13 +313,13 @@ const period30ChangeText = computed(() => {
   if (!dashboardData.value?.balanceHistory.length || dashboardData.value.balanceHistory.length < 2) {
     return '+0.00%'
   }
-  
+
   const history = dashboardData.value.balanceHistory
   const current = history[history.length - 1].btc_amount
   const initial = history[0].btc_amount
-  
+
   if (initial === 0) return '+0.00%'
-  
+
   const change = ((current - initial) / initial) * 100
   const sign = change >= 0 ? '+' : ''
   return `${sign}${change.toFixed(2)}%`
@@ -374,13 +351,13 @@ const avgBTCBalance = computed(() => {
 // Market rate statistics
 const rateChangeText = computed(() => {
   if (marketRates.value.length < 2) return '+0.00%'
-  
+
   const sortedRates = [...marketRates.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
   const initial = sortedRates[0].btc_jpy_rate
   const current = sortedRates[sortedRates.length - 1].btc_jpy_rate
-  
+
   if (initial === 0) return '+0.00%'
-  
+
   const change = ((current - initial) / initial) * 100
   const sign = change >= 0 ? '+' : ''
   return `${sign}${change.toFixed(2)}%`
@@ -451,14 +428,6 @@ const hasPermission = (permission: string) => {
 
 
 // Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
-
-const formatNumber = (number: number) => {
-  return number.toLocaleString('ja-JP')
-}
-
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('ja-JP', {
     month: '2-digit',

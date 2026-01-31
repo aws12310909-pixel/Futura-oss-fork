@@ -1,10 +1,6 @@
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    max-width="500"
-    persistent
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
+  <v-dialog :model-value="modelValue" max-width="500" persistent
+    @update:model-value="$emit('update:modelValue', $event)">
     <v-card>
       <v-card-title class="text-lg font-semibold">
         {{ form.transaction_type === 'deposit' ? '入金' : '出金' }}リクエスト
@@ -14,26 +10,18 @@
         <v-form ref="formRef" @submit.prevent="submitRequest">
           <div class="space-y-4">
             <!-- Transaction Type Selection -->
-            <v-select
-              v-model="form.transaction_type"
-              :items="transactionTypeOptions"
-              label="取引種別 *"
-              variant="outlined"
-              :rules="typeRules"
-              required
-            />
+            <v-select v-model="form.transaction_type" :items="transactionTypeOptions" label="取引種別 *" variant="outlined"
+              :rules="typeRules" required />
 
             <!-- Amount Input with Currency Conversion -->
             <div class="space-y-2">
               <label class="text-sm font-medium text-gray-700">金額 *</label>
-              <CommonCurrencyInput
-                v-model="form.amount"
-                :max-btc="maxBtcAmount"
-                :disabled="loading || (form.transaction_type === 'withdrawal' && !isBalanceLoaded)"
-              />
-              
+              <CommonCurrencyInput v-model="form.amount" :max-btc="maxBtcAmount"
+                :disabled="loading || (form.transaction_type === 'withdrawal' && !isBalanceLoaded)" />
+
               <!-- Balance Info for Withdrawal -->
-              <div v-if="form.transaction_type === 'withdrawal'" class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div v-if="form.transaction_type === 'withdrawal'"
+                class="bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <div v-if="isBalanceLoaded" class="flex items-center justify-between text-sm">
                   <span class="font-medium text-blue-700">現在の残高:</span>
                   <span class="font-mono text-blue-900">{{ safeCurrentBalance.toFixed(8) }} BTC</span>
@@ -44,43 +32,21 @@
               </div>
 
               <!-- Withdrawal Warning -->
-              <v-alert
-                v-if="isInsufficientBalance"
-                type="error"
-                variant="tonal"
-                density="compact"
-                class="mt-2"
-              >
+              <v-alert v-if="isInsufficientBalance" type="error" variant="tonal" density="compact" class="mt-2">
                 残高が不足しています。最大出金可能額: {{ safeCurrentBalance.toFixed(8) }} BTC
               </v-alert>
             </div>
 
-            <v-select
-              v-model="form.reason"
-              :items="reasonOptions"
-              :label="`${form.transaction_type === 'deposit' ? '入金' : '出金'}理由 *`"
-              variant="outlined"
-              :rules="reasonRules"
-              required
-            />
+            <v-select v-model="form.reason" :items="reasonOptions"
+              :label="`${form.transaction_type === 'deposit' ? '入金' : '出金'}理由 *`" variant="outlined"
+              :rules="reasonRules" required />
 
-            <v-textarea
-              v-model="form.memo"
-              label="メモ（任意）"
-              variant="outlined"
-              rows="3"
-              maxlength="500"
-              counter
+            <v-textarea v-model="form.memo" label="メモ（任意）" variant="outlined" rows="3" maxlength="500" counter
               :hint="form.reason === 'その他' ? '「その他」を選択した場合は理由の詳細があれば記入してください' : '管理者への追加情報があれば記入してください'"
-              persistent-hint
-            />
+              persistent-hint />
 
             <!-- Warning Message -->
-            <v-alert 
-              color="warning" 
-              variant="tonal"
-              class="text-sm"
-            >
+            <v-alert color="warning" variant="tonal" class="text-sm">
               <div class="space-y-1">
                 <p>• リクエスト後は管理者による承認が必要です</p>
                 <p>• 承認待ち中は新しいリクエストを送信できません</p>
@@ -93,19 +59,13 @@
       </v-card-text>
 
       <v-card-actions class="flex justify-end gap-2 px-6 pb-6">
-        <button
-          type="button"
-          class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          @click="$emit('update:modelValue', false)"
-        >
+        <button type="button" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          @click="$emit('update:modelValue', false)">
           キャンセル
         </button>
-        <button
-          type="button"
+        <button type="button"
           class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          :disabled="loading"
-          @click="submitRequest"
-        >
+          :disabled="loading" @click="submitRequest">
           <span v-if="loading">送信中...</span>
           <span v-else>リクエスト送信</span>
         </button>
@@ -116,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import type { TransactionRequestForm } from '~/types'
+import type { TransactionRequestForm, DashboardData } from '~/types'
 import CurrencyInput from '~/components/common/CurrencyInput.vue'
 
 const emit = defineEmits<{
@@ -192,16 +152,16 @@ const maxBtcAmount = computed(() => {
 })
 
 const isInsufficientBalance = computed(() => {
-  return form.value.transaction_type === 'withdrawal' && 
-         isBalanceLoaded.value && 
-         Math.abs(form.value.amount) > safeCurrentBalance.value
+  return form.value.transaction_type === 'withdrawal' &&
+    isBalanceLoaded.value &&
+    Math.abs(form.value.amount) > safeCurrentBalance.value
 })
 
 // Fetch current user balance
 const fetchUserBalance = async () => {
   try {
-    const response = await apiClient.get<{ btc_balance: number }>('/profile')
-    currentBalance.value = response.data!.btc_balance
+    const response = await apiClient.get<DashboardData>('/dashboard')
+    currentBalance.value = response.data!.currentBalance
   } catch (error) {
     console.error('Failed to fetch user balance:', error)
     currentBalance.value = null
@@ -221,22 +181,22 @@ const submitRequest = async () => {
   }
 
   loading.value = true
-  
+
   try {
     // 出金の場合は負の値に変換して送信
     const submitData = {
       ...form.value,
       amount: form.value.transaction_type === 'withdrawal' ? -Math.abs(form.value.amount) : form.value.amount
     }
-    
+
     const response = await apiClient.post<{ data: any; message: string }>('/transactions/request', submitData)
 
     const transactionType = form.value.transaction_type === 'deposit' ? '入金' : '出金'
     useNotification().showSuccess(response.data!.message || `${transactionType}リクエストを送信しました`)
-    
+
     emit('request-created', response.data!.data)
     emit('update:modelValue', false)
-    
+
     // Reset form
     form.value = {
       amount: 0,

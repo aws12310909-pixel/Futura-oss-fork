@@ -1,9 +1,5 @@
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    max-width="500"
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
+  <v-dialog :model-value="modelValue" max-width="500" @update:model-value="$emit('update:modelValue', $event)">
     <v-card>
       <v-card-title class="text-lg font-semibold">
         取引詳細
@@ -14,15 +10,8 @@
           <!-- Transaction Type -->
           <div class="flex items-center justify-between py-3 border-b">
             <span class="text-gray-600">取引種別</span>
-            <v-chip
-              :color="getTransactionTypeColor(transaction.transaction_type)"
-              size="small"
-              variant="flat"
-            >
-              <Icon
-                :name="getTransactionTypeIcon(transaction.transaction_type)"
-                class="mr-1"
-              />
+            <v-chip :color="getTransactionTypeColor(transaction.transaction_type)" size="small" variant="flat">
+              <Icon :name="getTransactionTypeIcon(transaction.transaction_type)" class="mr-1" />
               {{ getTransactionTypeLabel(transaction.transaction_type) }}
             </v-chip>
           </div>
@@ -30,11 +19,10 @@
           <!-- Amount -->
           <div class="flex items-center justify-between py-3 border-b">
             <span class="text-gray-600">金額</span>
-            <span
-              class="font-mono font-semibold text-lg"
-              :class="getTransactionTypeTextColor(transaction.transaction_type)"
-            >
-              {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{ formatBTC(Math.abs(transaction.amount)) }} BTC
+            <span class="font-mono font-semibold text-lg"
+              :class="getTransactionTypeTextColor(transaction.transaction_type)">
+              {{ getTransactionTypeSign(transaction.transaction_type, transaction.amount) }}{{
+                formatBTC(Math.abs(transaction.amount)) }} BTC
             </span>
           </div>
 
@@ -68,10 +56,7 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn
-          variant="text"
-          @click="$emit('update:modelValue', false)"
-        >
+        <v-btn variant="text" @click="$emit('update:modelValue', false)">
           閉じる
         </v-btn>
       </v-card-actions>
@@ -81,13 +66,14 @@
 
 <script setup lang="ts">
 import type { Transaction } from '~/types'
-import { 
-  getTransactionTypeLabel, 
-  getTransactionTypeColor, 
-  getTransactionTypeIcon, 
-  getTransactionTypeTextColor, 
-  getTransactionTypeSign 
+import {
+  getTransactionTypeLabel,
+  getTransactionTypeColor,
+  getTransactionTypeIcon,
+  getTransactionTypeTextColor,
+  getTransactionTypeSign
 } from '~/utils/transaction'
+import { formatBTC } from '~/utils/format'
 
 // Props & Emits
 const _props = defineProps<{
@@ -100,10 +86,6 @@ const _emit = defineEmits<{
 }>()
 
 // Utility functions
-const formatBTC = (amount: number) => {
-  return amount.toFixed(8)
-}
-
 const formatDateTime = (dateString: string) => {
   return new Date(dateString).toLocaleString('ja-JP', {
     year: 'numeric',
