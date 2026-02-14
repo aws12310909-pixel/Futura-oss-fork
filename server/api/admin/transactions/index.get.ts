@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
     const page = Number(query.page) || 1
     const limit = Math.min(Number(query.limit) || 20, 100)
     const transactionType = query.transaction_type as string
+    const status = query.status as string
     const userId = query.user_id as string
 
     const dynamodb = getDynamoDBService()
@@ -56,9 +57,18 @@ export default defineEventHandler(async (event) => {
     logger.debug('取引履歴取得結果:', { count: transactions.length })
 
     // Filter by transaction type if specified
-    if (transactionType && ['deposit', 'withdrawal'].includes(transactionType)) {
+    if (transactionType && transactionType !== 'all') {
       transactions = transactions.filter(t => t.transaction_type === transactionType)
       logger.debug('取引種別フィルタ適用後:', { transactionType, count: transactions.length })
+    }
+
+    // Filter by status if specified
+    if (status && status !== 'all') {
+      transactions = transactions.filter(t => {
+        const s = t.status || 'approved'
+        return s === status
+      })
+      logger.debug('ステータスフィルタ適用後:', { status, count: transactions.length })
     }
 
     // Get all users to enrich transaction data
