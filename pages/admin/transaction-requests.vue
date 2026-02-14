@@ -58,114 +58,61 @@
       </v-card-text>
     </v-card>
 
-    <!-- Requests Table -->
     <v-card class="card-shadow">
-      <v-card-text class="p-0">
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <v-progress-circular indeterminate color="primary" />
-        </div>
+      <v-data-table-server v-model:items-per-page="limit" v-model:page="page" :headers="headers" :items="requests"
+        :items-length="totalCount" :loading="loading" class="elevation-0" no-data-text="リクエストがありません"
+        loading-text="読み込み中..." @update:options="handleOptionsUpdate">
+        <template #[`item.user_id`]="{ item }">
+          <div>
+            <div class="text-sm font-medium text-gray-900">
+              {{ item.user_name }}
+            </div>
+            <div class="text-sm text-gray-500">
+              {{ item.user_email }}
+            </div>
+          </div>
+        </template>
 
-        <div v-else-if="requests.length === 0" class="text-center py-12">
-          <Icon name="mdi:inbox" class="text-4xl text-gray-400 mb-4" />
-          <p class="text-gray-500">{{ selectedStatus === 'pending' ? '承認待ちのリクエストはありません' : 'リクエストがありません' }}</p>
-        </div>
+        <template #[`item.amount`]="{ item }">
+          <div class="text-sm font-mono text-gray-900">
+            {{ formatBTC(item.amount) }} BTC
+          </div>
+        </template>
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ユーザー
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  金額
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  理由
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  リクエスト日時
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ステータス
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  アクション
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="request in requests" :key="request.transaction_id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ request.user_name }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        {{ request.user_email }}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-mono text-gray-900">
-                    {{ formatBTC(request.amount) }} BTC
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="text-sm text-gray-900 max-w-xs truncate" :title="request.reason">
-                    {{ request.reason }}
-                  </div>
-                  <div v-if="request.memo" class="text-sm text-gray-500 max-w-xs truncate" :title="request.memo">
-                    メモ: {{ request.memo }}
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ formatDateTime(request.requested_at) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <CommonStatusBadge :status="request.status" />
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <div v-if="request.status === 'pending'" class="flex space-x-2">
-                    <button
-                      class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                      @click="approveRequest(request)">
-                      承認
-                    </button>
-                    <button class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                      @click="showRejectDialog(request)">
-                      拒否
-                    </button>
-                  </div>
-                  <div v-else class="text-gray-500">
-                    {{ request.status === 'approved' ? '承認済み' : '拒否済み' }}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </v-card-text>
+        <template #[`item.reason`]="{ item }">
+          <div class="text-sm text-gray-900 max-w-xs truncate" :title="item.reason">
+            {{ item.reason }}
+          </div>
+          <div v-if="item.memo" class="text-sm text-gray-500 max-w-xs truncate" :title="item.memo">
+            メモ: {{ item.memo }}
+          </div>
+        </template>
+
+        <template #[`item.requested_at`]="{ item }">
+          <span class="text-sm text-gray-900">
+            {{ formatDateTime(item.requested_at) }}
+          </span>
+        </template>
+
+        <template #[`item.status`]="{ item }">
+          <CommonStatusBadge :status="item.status" />
+        </template>
+
+        <template #[`item.actions`]="{ item }">
+          <div v-if="item.status === 'pending'" class="flex space-x-2">
+            <v-btn size="small" color="success" variant="flat" @click="approveRequest(item)">
+              承認
+            </v-btn>
+            <v-btn size="small" color="error" variant="flat" @click="showRejectDialog(item)">
+              拒否
+            </v-btn>
+          </div>
+          <div v-else class="text-gray-500">
+            {{ item.status === 'approved' ? '承認済み' : '拒否済み' }}
+          </div>
+        </template>
+      </v-data-table-server>
     </v-card>
-
-    <!-- Pagination -->
-    <div v-if="totalCount > limit" class="mt-6 flex justify-center">
-      <div class="flex items-center space-x-2">
-        <button class="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="page <= 1" @click="changePage(page - 1)">
-          前へ
-        </button>
-        <span class="text-sm text-gray-600">
-          {{ page }} / {{ Math.ceil(totalCount / limit) }}
-        </span>
-        <button class="px-3 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!hasMore" @click="changePage(page + 1)">
-          次へ
-        </button>
-      </div>
-    </div>
 
     <!-- Reject Dialog -->
     <AdminTransactionRejectDialog v-model="showRejectDialogState" :request="selectedRequest"
@@ -219,6 +166,16 @@ const hasMore = ref(false)
 const currentRate = ref(0)
 const showRejectDialogState = ref(false)
 const selectedRequest = ref<EnhancedTransactionRequest | null>(null)
+
+// Table headers
+const headers = [
+  { title: 'ユーザー', key: 'user_id', sortable: false },
+  { title: '金額', key: 'amount', sortable: true },
+  { title: '理由', key: 'reason', sortable: false },
+  { title: 'リクエスト日時', key: 'requested_at', sortable: true },
+  { title: 'ステータス', key: 'status', sortable: true },
+  { title: 'アクション', key: 'actions', sortable: false, width: 160 }
+]
 
 // Status options
 const statusOptions = [
@@ -276,6 +233,17 @@ const changePage = (newPage: number) => {
   page.value = newPage
   loadRequests()
 }
+
+const handleOptionsUpdate = (options: any) => {
+  page.value = options.page
+  limit.value = options.itemsPerPage
+  loadRequests()
+}
+
+watch([selectedStatus], () => {
+  page.value = 1
+  loadRequests()
+})
 
 const approveRequest = async (request: EnhancedTransactionRequest) => {
   try {

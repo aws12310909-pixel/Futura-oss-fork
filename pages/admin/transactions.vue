@@ -5,11 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">入出金管理</h1>
         <p class="text-gray-600">ユーザーの入出金を管理し、残高を調整します</p>
       </div>
-      <v-btn
-        color="primary"
-                  prepend-icon="mdi-plus"
-        @click="showCreateDialog = true"
-      >
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
         新しい取引を追加
       </v-btn>
     </div>
@@ -18,36 +14,13 @@
     <v-card class="mb-6">
       <v-card-text class="py-4">
         <div class="flex items-center space-x-4 flex-wrap gap-y-2">
-          <v-select
-            v-model="selectedUser"
-            :items="userOptions"
-            label="ユーザー"
-            variant="outlined"
-            density="compact"
-            clearable
-            class="w-64"
-          />
-          <v-select
-            v-model="selectedTransactionType"
-            :items="transactionTypeOptions"
-            label="取引種別"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-select
-            v-model="selectedStatus"
-            :items="statusOptions"
-            label="承認状態"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-refresh"
-            @click="loadTransactions"
-          >
+          <v-select v-model="selectedUser" :items="userOptions" label="ユーザー" variant="outlined" density="compact"
+            clearable class="w-64" />
+          <v-select v-model="selectedTransactionType" :items="transactionTypeOptions" label="取引種別" variant="outlined"
+            density="compact" class="w-48" />
+          <v-select v-model="selectedStatus" :items="statusOptions" label="承認状態" variant="outlined" density="compact"
+            class="w-48" />
+          <v-btn variant="outlined" prepend-icon="mdi-refresh" @click="loadTransactions">
             更新
           </v-btn>
         </div>
@@ -108,49 +81,24 @@
         <h3 class="text-lg font-semibold text-gray-900">取引履歴</h3>
       </v-card-title>
 
-      <v-data-table
-        :headers="headers"
-        :items="filteredTransactions"
-        :loading="loading"
-        :items-per-page="20"
-        class="elevation-0"
-        no-data-text="取引履歴がありません"
-        loading-text="読み込み中..."
-      >
+      <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="transactions"
+        :items-length="totalCount" :loading="loading" class="elevation-0" no-data-text="取引履歴がありません"
+        loading-text="読み込み中..." @update:options="handleOptionsUpdate">
         <template #[`item.transaction_type`]="{ item }">
           <div class="flex gap-1.5">
-            <v-chip
-              :color="getTransactionTypeColor(item)"
-              size="small"
-              variant="flat"
-              class="justify-start"
-            >
-              <Icon
-                :name="getTransactionTypeIcon(item.transaction_type)"
-                class="mr-1.5 w-3.5 h-3.5"
-              />
+            <v-chip :color="getTransactionTypeColor(item)" size="small" variant="flat" class="justify-start">
+              <Icon :name="getTransactionTypeIcon(item.transaction_type)" class="mr-1.5 w-3.5 h-3.5" />
               {{ getTransactionTypeLabel(item.transaction_type) }}
             </v-chip>
-            <v-chip
-              :color="getStatusColor(item.status)"
-              size="small"
-              variant="outlined"
-              class="justify-start"
-            >
-              <Icon 
-                :name="getStatusIcon(item.status)" 
-                class="mr-1.5 w-3.5 h-3.5" 
-              />
+            <v-chip :color="getStatusColor(item.status)" size="small" variant="outlined" class="justify-start">
+              <Icon :name="getStatusIcon(item.status)" class="mr-1.5 w-3.5 h-3.5" />
               {{ getStatusText(item.status) }}
             </v-chip>
           </div>
         </template>
 
         <template #[`item.amount`]="{ item }">
-          <span
-            class="font-mono font-semibold"
-            :class="getTransactionTypeTextColor(item.transaction_type)"
-          >
+          <span class="font-mono font-semibold" :class="getTransactionTypeTextColor(item.transaction_type)">
             {{ getTransactionTypeSign(item.transaction_type, item.amount) }}{{ Math.abs(item.amount) }} BTC
           </span>
         </template>
@@ -174,36 +122,23 @@
         </template>
 
         <template #[`item.actions`]="{ item }">
-          <v-btn
-            size="small"
-            variant="text"
-            color="info"
-                          icon="mdi-eye"
-            @click="viewTransactionDetails(item)"
-          />
+          <v-btn size="small" variant="text" color="info" icon="mdi-eye" @click="viewTransactionDetails(item)" />
         </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-card>
 
     <!-- Create Transaction Dialog -->
-    <AdminCreateTransactionDialog
-      v-model="showCreateDialog"
-      :users="users"
-      @created="handleTransactionCreated"
-    />
+    <AdminCreateTransactionDialog v-model="showCreateDialog" :users="users" @created="handleTransactionCreated" />
 
     <!-- Transaction Details Dialog -->
-    <AdminTransactionDetailsDialog
-      v-model="showDetailsDialog"
-      :transaction="selectedTransaction"
-    />
+    <AdminTransactionDetailsDialog v-model="showDetailsDialog" :transaction="selectedTransaction" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Transaction, User } from '~/types'
-import { 
-  getTransactionTypeLabel, 
+import type { Transaction, User, PaginatedResponse } from '~/types'
+import {
+  getTransactionTypeLabel,
   getTransactionTypeColor as getTransactionTypeColorUtil,
   getTransactionTypeIcon,
   getTransactionTypeTextColor,
@@ -227,8 +162,11 @@ const apiClient = useApiClient()
 
 // State
 const transactions = ref<(Transaction & { user_name: string; user_email: string })[]>([])
+const totalCount = ref(0)
 const users = ref<User[]>([])
 const loading = ref(false)
+const itemsPerPage = ref(20)
+const page = ref(1)
 const selectedUser = ref('')
 const selectedTransactionType = ref('all')
 const selectedStatus = ref('all')
@@ -251,7 +189,7 @@ const statusOptions = [
   { title: '拒否済み', value: 'rejected' }
 ]
 
-const userOptions = computed(() => 
+const userOptions = computed(() =>
   users.value.map(user => ({
     title: `${user.name} (${user.email})`,
     value: user.user_id
@@ -268,27 +206,8 @@ const headers = [
   { title: 'アクション', key: 'actions', sortable: false, width: 100 }
 ]
 
-// Computed
-const filteredTransactions = computed(() => {
-  let filtered = transactions.value
-
-  if (selectedUser.value) {
-    filtered = filtered.filter(t => t.user_id === selectedUser.value)
-  }
-
-  if (selectedTransactionType.value !== 'all') {
-    filtered = filtered.filter(t => t.transaction_type === selectedTransactionType.value)
-  }
-
-  if (selectedStatus.value !== 'all') {
-    filtered = filtered.filter(t => {
-      const status = t.status || 'approved' // statusが未設定の場合は承認済みとして扱う
-      return status === selectedStatus.value
-    })
-  }
-
-  return filtered
-})
+// 算出プロパティ（Computed）
+// サーバーサイドフィルタリングに移行するため削除
 
 // Helper function to determine if transaction is approved
 const isApprovedTransaction = (transaction: Transaction): boolean => {
@@ -298,7 +217,7 @@ const isApprovedTransaction = (transaction: Transaction): boolean => {
 // 全体統計（承認待ち含む）
 const todayTransactionCount = computed(() => {
   const today = new Date().toDateString()
-  return transactions.value.filter(t => 
+  return transactions.value.filter(t =>
     new Date(t.timestamp).toDateString() === today
   ).length
 })
@@ -317,12 +236,12 @@ const todayWithdrawalTotal = computed(() => {
     .reduce((sum, t) => sum + t.amount, 0)
 })
 
-const totalTransactions = computed(() => transactions.value.length)
+const totalTransactions = computed(() => totalCount.value)
 
 // 承認済み統計
 const todayApprovedCount = computed(() => {
   const today = new Date().toDateString()
-  return transactions.value.filter(t => 
+  return transactions.value.filter(t =>
     new Date(t.timestamp).toDateString() === today && isApprovedTransaction(t)
   ).length
 })
@@ -330,9 +249,9 @@ const todayApprovedCount = computed(() => {
 const todayApprovedDepositTotal = computed(() => {
   const today = new Date().toDateString()
   return transactions.value
-    .filter(t => 
-      new Date(t.timestamp).toDateString() === today && 
-      t.transaction_type === 'deposit' && 
+    .filter(t =>
+      new Date(t.timestamp).toDateString() === today &&
+      t.transaction_type === 'deposit' &&
       isApprovedTransaction(t)
     )
     .reduce((sum, t) => sum + t.amount, 0)
@@ -341,9 +260,9 @@ const todayApprovedDepositTotal = computed(() => {
 const todayApprovedWithdrawalTotal = computed(() => {
   const today = new Date().toDateString()
   return transactions.value
-    .filter(t => 
-      new Date(t.timestamp).toDateString() === today && 
-      t.transaction_type === 'withdrawal' && 
+    .filter(t =>
+      new Date(t.timestamp).toDateString() === today &&
+      t.transaction_type === 'withdrawal' &&
       isApprovedTransaction(t)
     )
     .reduce((sum, t) => sum + t.amount, 0)
@@ -353,12 +272,28 @@ const pendingTransactionCount = computed(() => {
   return transactions.value.filter(t => t.status === 'pending').length
 })
 
-// Methods
+// メソッド
 const loadTransactions = async () => {
   loading.value = true
   try {
-    const response = await apiClient.get<{ items: (Transaction & { user_name: string; user_email: string })[] }>('/admin/transactions')
-    transactions.value = response.data!.items
+    const params: Record<string, any> = {
+      page: page.value,
+      limit: itemsPerPage.value
+    }
+    if (selectedUser.value) {
+      params.user_id = selectedUser.value
+    }
+    if (selectedTransactionType.value && selectedTransactionType.value !== 'all') {
+      params.transaction_type = selectedTransactionType.value
+    }
+    if (selectedStatus.value && selectedStatus.value !== 'all') {
+      params.status = selectedStatus.value
+    }
+
+    const response = await apiClient.get<PaginatedResponse<Transaction & { user_name: string; user_email: string }>>('/admin/transactions', { params })
+    const data = response.data!
+    transactions.value = data.items
+    totalCount.value = data.total
   } catch (error) {
     logger.error('取引履歴の読み込みに失敗しました:', error)
     showError('取引履歴の取得に失敗しました')
@@ -366,6 +301,17 @@ const loadTransactions = async () => {
     loading.value = false
   }
 }
+
+const handleOptionsUpdate = (options: any) => {
+  page.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  loadTransactions()
+}
+
+watch([selectedUser, selectedTransactionType, selectedStatus], () => {
+  page.value = 1
+  loadTransactions()
+})
 
 const loadUsers = async () => {
   try {

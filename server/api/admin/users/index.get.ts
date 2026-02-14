@@ -16,8 +16,9 @@ export default defineEventHandler(async (event) => {
     const limit = Math.min(Number(query.limit) || 20, 100)
     const status = query.status as string
     const search = query.search as string
+    const profileApproved = query.profile_approved as string
     
-    logger.debug('ユーザー取得リクエスト:', { page, limit, status, search })
+    logger.debug('ユーザー取得リクエスト:', { page, limit, status, search, profileApproved })
     
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
@@ -30,6 +31,14 @@ export default defineEventHandler(async (event) => {
     if (status && status !== 'all') {
       filterExpression += ' AND #status = :status'
       expressionAttributeValues[':status'] = status
+    }
+
+    if (profileApproved === 'approved') {
+      filterExpression += ' AND profile_approved = :true'
+      expressionAttributeValues[':true'] = true
+    } else if (profileApproved === 'pending') {
+      filterExpression += ' AND (attribute_not_exists(profile_approved) OR profile_approved = :false)'
+      expressionAttributeValues[':false'] = false
     }
     
     // 検索機能のサポート

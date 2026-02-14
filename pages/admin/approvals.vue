@@ -42,28 +42,11 @@
     <v-card class="mb-6">
       <v-card-text class="py-4">
         <div class="flex items-center space-x-4">
-          <v-select
-            v-model="selectedStatus"
-            :items="statusOptions"
-            label="承認ステータス"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-text-field
-            v-model="searchQuery"
-            label="検索"
-            prepend-inner-icon="mdi-magnify"
-            variant="outlined"
-            density="compact"
-            clearable
-            class="w-64"
-          />
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-refresh"
-            @click="loadUsers"
-          >
+          <v-select v-model="selectedStatus" :items="statusOptions" label="承認ステータス" variant="outlined" density="compact"
+            class="w-48" />
+          <v-text-field v-model="searchQuery" label="検索" prepend-inner-icon="mdi-magnify" variant="outlined"
+            density="compact" clearable class="w-64" />
+          <v-btn variant="outlined" prepend-icon="mdi-refresh" @click="loadUsers">
             更新
           </v-btn>
         </div>
@@ -72,49 +55,26 @@
 
     <!-- Users Table -->
     <v-card>
-      <v-data-table
-        :headers="headers"
-        :items="filteredUsers"
-        :loading="loading"
-        :items-per-page="20"
-        class="elevation-0"
-        no-data-text="ユーザーが見つかりません"
-        loading-text="読み込み中..."
-      >
+      <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="users"
+        :items-length="totalCount" :loading="loading" class="elevation-0" no-data-text="ユーザーが見つかりません"
+        loading-text="読み込み中..." @update:options="handleOptionsUpdate">
         <template #[`item.profile_approved`]="{ item }">
-          <v-chip
-            :color="item.profile_approved ? 'success' : 'warning'"
-            size="small"
-            variant="flat"
-          >
-            <Icon 
-              :name="item.profile_approved ? 'mdi:check' : 'mdi:clock-outline'" 
-              class="mr-1" 
-            />
+          <v-chip :color="item.profile_approved ? 'success' : 'warning'" size="small" variant="flat">
+            <Icon :name="item.profile_approved ? 'mdi:check' : 'mdi:clock-outline'" class="mr-1" />
             {{ item.profile_approved ? '承認済み' : '承認待ち' }}
           </v-chip>
         </template>
 
         <template #[`item.status`]="{ item }">
-          <v-chip
-            :color="getStatusColor(item.status)"
-            size="small"
-            variant="flat"
-          >
+          <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
             {{ getStatusText(item.status) }}
           </v-chip>
         </template>
 
         <template #[`item.profile_image_url`]="{ item }">
           <div class="flex items-center">
-            <v-btn
-              v-if="item.profile_image_url"
-              size="small"
-              variant="outlined"
-              color="info"
-              prepend-icon="mdi-image"
-              @click="viewImage(item.profile_image_url)"
-            >
+            <v-btn v-if="item.profile_image_url" size="small" variant="outlined" color="info" prepend-icon="mdi-image"
+              @click="viewImage(item.profile_image_url)">
               画像を表示
             </v-btn>
             <span v-else class="text-gray-400 text-sm">未アップロード</span>
@@ -127,52 +87,27 @@
 
         <template #[`item.actions`]="{ item }">
           <div class="flex items-center space-x-1">
-            <v-btn
-              size="small"
-              variant="text"
-              color="info"
-              icon="mdi-eye"
-              @click="viewUserDetails(item)"
-            />
-            <v-btn
-              v-if="!item.profile_approved && item.status !== 'deleted'"
-              size="small"
-              variant="text"
-              color="success"
-              icon="mdi-check"
-              @click="approveUser(item)"
-            />
-            <v-btn
-              v-if="item.profile_approved && item.status !== 'deleted'"
-              size="small"
-              variant="text"
-              color="error"
-              icon="mdi-close"
-              @click="rejectUser(item)"
-            />
+            <v-btn size="small" variant="text" color="info" icon="mdi-eye" @click="viewUserDetails(item)" />
+            <v-btn v-if="!item.profile_approved && item.status !== 'deleted'" size="small" variant="text"
+              color="success" icon="mdi-check" @click="approveUser(item)" />
+            <v-btn v-if="item.profile_approved && item.status !== 'deleted'" size="small" variant="text" color="error"
+              icon="mdi-close" @click="rejectUser(item)" />
           </div>
         </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-card>
 
     <!-- User Details Dialog -->
-    <AdminUserDetailsDialog
-      v-model="showDetailsDialog"
-      :user="selectedUser"
-      @approve="handleApprove"
-      @reject="handleReject"
-    />
+    <AdminUserDetailsDialog v-model="showDetailsDialog" :user="selectedUser" @approve="handleApprove"
+      @reject="handleReject" />
 
     <!-- Image Viewer Dialog -->
-    <AdminImageViewerDialog
-      v-model="showImageDialog"
-      :image-url="selectedImageUrl"
-    />
+    <AdminImageViewerDialog v-model="showImageDialog" :image-url="selectedImageUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { User } from '~/types'
+import type { User, PaginatedResponse } from '~/types'
 
 definePageMeta({
   middleware: 'auth',
@@ -190,7 +125,10 @@ const apiClient = useApiClient()
 
 // State
 const users = ref<User[]>([])
+const totalCount = ref(0)
 const loading = ref(false)
+const itemsPerPage = ref(20)
+const page = ref(1)
 const selectedStatus = ref('all')
 const searchQuery = ref('')
 const showDetailsDialog = ref(false)
@@ -216,48 +154,38 @@ const headers = [
   { title: 'アクション', key: 'actions', sortable: false, width: 160 }
 ]
 
-// Computed
-const filteredUsers = computed(() => {
-  let filtered = users.value.filter(user => user.status !== 'deleted')
+// 算出プロパティ（Computed）
+// サーバーサイドフィルタリングに移行するため削除
 
-  // Filter by approval status
-  if (selectedStatus.value === 'pending') {
-    filtered = filtered.filter(user => !user.profile_approved)
-  } else if (selectedStatus.value === 'approved') {
-    filtered = filtered.filter(user => user.profile_approved)
-  }
-
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
-      user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
-    )
-  }
-
-  return filtered
-})
-
-const pendingCount = computed(() => 
+const pendingCount = computed(() =>
   users.value.filter(user => !user.profile_approved && user.status !== 'deleted').length
 )
 
-const approvedCount = computed(() => 
+const approvedCount = computed(() =>
   users.value.filter(user => user.profile_approved && user.status !== 'deleted').length
 )
 
-const totalUsers = computed(() => 
-  users.value.filter(user => user.status !== 'deleted').length
-)
+const totalUsers = computed(() => totalCount.value)
 
 // Methods
 const loadUsers = async () => {
   loading.value = true
   try {
-    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    const params: Record<string, any> = {
+      page: page.value,
+      limit: itemsPerPage.value
+    }
+    if (selectedStatus.value && selectedStatus.value !== 'all') {
+      params.profile_approved = selectedStatus.value
+    }
+    if (searchQuery.value && searchQuery.value.trim() !== '') {
+      params.search = searchQuery.value.trim()
+    }
+
+    const response = await apiClient.get<PaginatedResponse<User>>('/admin/users', { params })
     const data = response.data!
     users.value = data.items
+    totalCount.value = data.total
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
     showError('ユーザー一覧の取得に失敗しました')
@@ -265,6 +193,17 @@ const loadUsers = async () => {
     loading.value = false
   }
 }
+
+const handleOptionsUpdate = (options: any) => {
+  page.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  loadUsers()
+}
+
+watch([selectedStatus, searchQuery], () => {
+  page.value = 1
+  loadUsers()
+})
 
 const approveUser = async (user: User) => {
   if (!confirm(`${user.name}のプロフィールを承認してもよろしいですか？`)) {
@@ -283,7 +222,7 @@ const approveUser = async (user: User) => {
 
 const rejectUser = async (user: User) => {
   const reason = prompt(`${user.name}のプロフィール承認を取り消す理由を入力してください（任意）:`)
-  
+
   if (reason === null) return // User cancelled
 
   try {
