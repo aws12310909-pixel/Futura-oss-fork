@@ -1,4 +1,5 @@
-import { CognitoIdentityProviderClient, AdminDisableUserCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { AdminDisableUserCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { createCognitoClient } from '~/server/utils/client-factory'
 import { getDynamoDBService } from '~/server/utils/dynamodb'
 
 export default defineEventHandler(async (event) => {
@@ -16,9 +17,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const config = useRuntimeConfig()
-    const cognitoClient = new CognitoIdentityProviderClient({
-      region: config.awsRegion
-    })
+    const cognitoClient = createCognitoClient()
 
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
