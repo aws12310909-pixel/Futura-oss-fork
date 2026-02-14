@@ -1,9 +1,10 @@
-import { CognitoIdentityProviderClient, AdminSetUserPasswordCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { AdminSetUserPasswordCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { createCognitoClient } from '~/server/utils/client-factory'
 import { getDynamoDBService } from '~/server/utils/dynamodb'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Require admin permission
+    // 管理者権限が必要
     await requirePermission(event, 'user:update')
 
     const userId = getRouterParam(event, 'userId')
@@ -24,14 +25,12 @@ export default defineEventHandler(async (event) => {
     }
 
     const config = useRuntimeConfig()
-    const cognitoClient = new CognitoIdentityProviderClient({
-      region: config.awsRegion
-    })
+    const cognitoClient = createCognitoClient()
 
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
 
-    // Get user from DynamoDB to get email
+    // メールアドレス取得のためDynamoDBからユーザーを取得
     const user = await dynamodb.get(tableName, { user_id: userId })
     
     if (!user) {
@@ -48,12 +47,12 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Set temporary password in Cognito
+    // Cognitoでテンポラリパスワードを設定
     const setPasswordCommand = new AdminSetUserPasswordCommand({
       UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email,
       Password: body.temporary_password,
-      Permanent: false // User must change on next login
+      Permanent: false // 次回ログイン時にユーザーは変更が必要
     })
 
     await cognitoClient.send(setPasswordCommand)

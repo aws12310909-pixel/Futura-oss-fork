@@ -8,40 +8,53 @@ type DynamoDBRecord = Record<string, DynamoDBValue>
 export default defineEventHandler(async (event) => {
   const logger = useLogger({ prefix: '[AdminUsersGet]' })
   try {
-    // Require admin permission
+    // 管理者権限が必要
     await requirePermission(event, 'user:read')
 
     const query = getQuery(event)
     const page = Number(query.page) || 1
     const limit = Math.min(Number(query.limit) || 20, 100)
     const status = query.status as string
+    const search = query.search as string
     
-    logger.debug('ユーザー取得リクエスト:', { page, limit, status })
-
+    logger.debug('ユーザー取得リクエスト:', { page, limit, status, search })
+    
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
-
-    // Build filter expression
+    
+    // フィルター式の構築
     let filterExpression = '#status <> :deleted'
-    const expressionAttributeNames = { '#status': 'status' }
+    const expressionAttributeNames: Record<string, string> = { '#status': 'status' }
     const expressionAttributeValues: DynamoDBRecord = { ':deleted': 'deleted' }
-
+    
     if (status && status !== 'all') {
       filterExpression += ' AND #status = :status'
       expressionAttributeValues[':status'] = status
     }
+    
+    // 検索機能のサポート
+    if (search) {
+      filterExpression += ' AND (contains(#name, :search) OR contains(#email, :search))'
+      expressionAttributeNames['#name'] = 'name'
+      expressionAttributeNames['#email'] = 'email'
+      expressionAttributeValues[':search'] = search
+    }
 
-    // Scan users table (in production, consider using pagination with LastEvaluatedKey)
+    // ユーザーテーブルのスキャン
+    // 注意: DynamoDBのフィルタリングは、フィルターを適用する前にすべてのアイテムをスキャンします。
+    // 小規模なデータセットの場合は問題ありませんが、大規模な場合はインデックスを使用すべきです。
     const result = await dynamodb.scan(tableName, {
       filterExpression,
       expressionAttributeNames,
       expressionAttributeValues,
-      limit: limit * page // Simple pagination
+      // フロントエンドで総数が必要なため、ここでは制限をかけない
     })
 
-    const users = result.items as User[]
+    const users = (result.items as User[]).sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
     
-    // Simple pagination logic
+    // ページネーションロジック
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
     const paginatedUsers = users.slice(startIndex, endIndex)
@@ -54,7 +67,7 @@ export default defineEventHandler(async (event) => {
       hasMore: endIndex < users.length
     }
     
-    logger.info(`ユーザー取得完了: 総数${users.length}件, 返却${paginatedUsers.length}件`)
+    logger.info(`ユーザー取得完了: 総数${users.length}件, 返却${paginatedUsers.length}件 (page: ${page}, limit: ${limit})`)
 
     return {
       success: true,

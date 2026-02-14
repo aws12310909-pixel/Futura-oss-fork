@@ -10,6 +10,8 @@ import {
   AdminRemoveUserFromGroupCommand,
   AdminGetUserCommand,
   ListUsersInGroupCommand,
+  type ListGroupsCommandOutput,
+  type ListUsersInGroupCommandOutput,
   UserNotFoundException
 } from '@aws-sdk/client-cognito-identity-provider'
 
@@ -55,12 +57,24 @@ export const listCognitoGroups = async (): Promise<CognitoGroup[]> => {
     const config = useRuntimeConfig()
     const client = createCognitoClient()
     
-    const command = new ListGroupsCommand({
-      UserPoolId: config.cognitoUserPoolId as string
-    })
+    // 全てのグループをページネーションを使用して取得
+    let allGroups: any[] = []
+    let nextToken: string | undefined = undefined
     
-    const response = await client.send(command)
-    return response.Groups?.map(group => ({
+    do {
+      const command = new ListGroupsCommand({
+        UserPoolId: config.cognitoUserPoolId as string,
+        NextToken: nextToken
+      })
+      
+      const response = await client.send(command) as ListGroupsCommandOutput
+      if (response.Groups) {
+        allGroups = [...allGroups, ...response.Groups]
+      }
+      nextToken = response.NextToken
+    } while (nextToken)
+    
+    return allGroups.map(group => ({
       GroupName: group.GroupName || '',
       UserPoolId: config.cognitoUserPoolId as string,
       Description: group.Description,
@@ -351,27 +365,38 @@ export const listUsersInGroup = async (groupName: string): Promise<User[]> => {
     const config = useRuntimeConfig()
     const client = createCognitoClient()
     
-    const command = new ListUsersInGroupCommand({
-      UserPoolId: config.cognitoUserPoolId as string,
-      GroupName: groupName
-    })
+    // グループ内の全ユーザーをページネーションを使用して取得
+    let allCognitoUsers: any[] = []
+    let nextToken: string | undefined = undefined
     
-    const response = await client.send(command)
+    do {
+      const command = new ListUsersInGroupCommand({
+        UserPoolId: config.cognitoUserPoolId as string,
+        GroupName: groupName,
+        NextToken: nextToken
+      })
+      
+      const response = await client.send(command) as ListUsersInGroupCommandOutput
+      if (response.Users) {
+        allCognitoUsers = [...allCognitoUsers, ...response.Users]
+      }
+      nextToken = response.NextToken
+    } while (nextToken)
     
-    if (!response.Users) {
+    if (allCognitoUsers.length === 0) {
       return []
     }
     
-    // Get user details from DynamoDB
+    // DynamoDBからユーザー詳細を取得
     const dynamodb = getDynamoDBService()
     const usersTableName = dynamodb.getTableName('users')
     
     const users: User[] = []
     
-    for (const cognitoUser of response.Users) {
+    for (const cognitoUser of allCognitoUsers) {
       try {
         // Get user ID (sub) from Cognito attributes
-        const subAttribute = cognitoUser.Attributes?.find(attr => attr.Name === 'sub')
+        const subAttribute = cognitoUser.Attributes?.find((attr: { Name?: string; Value?: string }) => attr.Name === 'sub')
         if (!subAttribute?.Value) continue
         
         // Get user details from DynamoDB

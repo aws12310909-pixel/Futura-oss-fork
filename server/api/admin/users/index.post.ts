@@ -21,9 +21,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const config = useRuntimeConfig()
-    const cognitoClient = new CognitoIdentityProviderClient({
-      region: config.awsRegion
-    })
+    const cognitoClient = createCognitoClient()
 
     // Create user in Cognito
     const createUserCommand = new AdminCreateUserCommand({

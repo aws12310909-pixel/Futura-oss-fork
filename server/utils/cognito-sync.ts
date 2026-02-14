@@ -1,4 +1,4 @@
-import { ListUsersCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { ListUsersCommand, type ListUsersCommandOutput } from '@aws-sdk/client-cognito-identity-provider'
 import { createCognitoClient } from './client-factory'
 import { getDynamoDBService } from './dynamodb'
 import { getCognitoGroups, listCognitoGroups, createCognitoGroup } from './cognito-groups'
@@ -94,29 +94,39 @@ async function syncUsersFromCognito(): Promise<{ synced: number; errors: number 
     const client = createCognitoClient()
     const dynamodb = getDynamoDBService()
     
-    // Cognitoからユーザー一覧を取得
-    const command = new ListUsersCommand({
-      UserPoolId: config.cognitoUserPoolId as string,
-      Limit: 60
-    })
+    // Cognitoから全ユーザーをページネーションを使用して取得
+    let allCognitoUsers: any[] = []
+    let nextToken: string | undefined = undefined
     
-    const response = await client.send(command)
+    do {
+      const listCommand = new ListUsersCommand({
+        UserPoolId: config.cognitoUserPoolId as string,
+        Limit: 60,
+        PaginationToken: nextToken
+      })
+      
+      const listResponse = await client.send(listCommand) as ListUsersCommandOutput
+      if (listResponse.Users) {
+        allCognitoUsers = [...allCognitoUsers, ...listResponse.Users]
+      }
+      nextToken = listResponse.PaginationToken
+    } while (nextToken)
     
-    if (!response.Users) {
+    if (allCognitoUsers.length === 0) {
       logger.info('Cognitoにユーザーが見つかりません')
       return { synced: 0, errors: 0 }
     }
     
-    logger.info(`Cognitoから${response.Users.length}人のユーザーを取得しました`)
+    logger.info(`Cognitoから合計${allCognitoUsers.length}人のユーザーを取得しました`)
     
     const usersTableName = dynamodb.getTableName('users')
     let syncedCount = 0
     let errorsCount = 0
     
-    for (const cognitoUser of response.Users) {
+    for (const cognitoUser of allCognitoUsers) {
       try {
         // ユーザー属性を取得
-        const attributes = cognitoUser.Attributes?.reduce((acc, attr) => {
+        const attributes = cognitoUser.Attributes?.reduce((acc: Record<string, string>, attr: { Name?: string; Value?: string }) => {
           if (attr.Name && attr.Value) {
             acc[attr.Name] = attr.Value
           }

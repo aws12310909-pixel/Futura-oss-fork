@@ -5,74 +5,39 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">ユーザー管理</h1>
         <p class="text-gray-600">システム内のユーザーアカウントを管理します</p>
       </div>
-      <v-btn
-        color="primary"
-                  prepend-icon="mdi-plus"
-        @click="showCreateDialog = true"
-      >
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
         新規ユーザー作成
       </v-btn>
     </div>
 
-    <!-- Filters -->
+    <!-- フィルター -->
     <v-card class="mb-6">
       <v-card-text class="py-4">
         <div class="flex items-center space-x-4">
-          <v-select
-            v-model="selectedStatus"
-            :items="statusOptions"
-            label="ステータス"
-            variant="outlined"
-            density="compact"
-            class="w-48"
-          />
-          <v-text-field
-            v-model="searchQuery"
-            label="検索"
-            prepend-inner-icon="mdi-magnify"
-            variant="outlined"
-            density="compact"
-            clearable
-            class="w-64"
-          />
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-refresh"
-            @click="loadUsers"
-          >
+          <v-select v-model="selectedStatus" :items="statusOptions" label="ステータス" variant="outlined" density="compact"
+            class="w-48" />
+          <v-text-field v-model="searchQuery" label="検索" prepend-inner-icon="mdi-magnify" variant="outlined"
+            density="compact" clearable class="w-64" />
+          <v-btn variant="outlined" prepend-icon="mdi-refresh" @click="loadUsers">
             更新
           </v-btn>
         </div>
       </v-card-text>
     </v-card>
 
-    <!-- Users Table -->
+    <!-- ユーザーテーブル -->
     <v-card>
-      <v-data-table
-        :headers="headers"
-        :items="filteredUsers"
-        :loading="loading"
-        :items-per-page="20"
-        class="elevation-0"
-        no-data-text="ユーザーが見つかりません"
-        loading-text="読み込み中..."
-      >
+      <v-data-table-server v-model:items-per-page="itemsPerPage" :headers="headers" :items="users"
+        :items-length="totalUsers" :loading="loading" :search="searchQuery" class="elevation-0"
+        no-data-text="ユーザーが見つかりません" loading-text="読み込み中..." @update:options="handleOptionsUpdate">
         <template #[`item.status`]="{ item }">
-          <v-chip
-            :color="getStatusColor(item.status)"
-            size="small"
-            variant="flat"
-          >
+          <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
             {{ getStatusText(item.status) }}
           </v-chip>
         </template>
 
         <template #[`item.profile_approved`]="{ item }">
-          <v-chip
-            :color="item.profile_approved ? 'success' : 'warning'"
-            size="small"
-            variant="flat"
-          >
+          <v-chip :color="item.profile_approved ? 'success' : 'warning'" size="small" variant="flat">
             {{ item.profile_approved ? '承認済み' : '未承認' }}
           </v-chip>
         </template>
@@ -83,89 +48,40 @@
 
         <template #[`item.actions`]="{ item }">
           <div class="flex items-center space-x-1">
-            <v-btn
-              size="small"
-              variant="text"
-              color="success"
-              icon="mdi-cash-plus"
-              @click="openDepositDialog(item)"
-            />
-            <v-btn
-              size="small"
-              variant="text"
-              color="info"
-              icon="mdi-information-outline"
-              @click="openUserDetailsDialog(item)"
-            />
-            <v-btn
-              v-if="item.status === 'active'"
-              size="small"
-              variant="text"
-              color="warning"
-              icon="mdi-pause"
-              @click="suspendUser(item)"
-            />
-            <v-btn
-              v-if="item.status === 'suspended'"
-              size="small"
-              variant="text"
-              color="success"
-              icon="mdi-play"
-              @click="activateUser(item)"
-            />
-            <v-btn
-              size="small"
-              variant="text"
-              color="info"
-              icon="mdi-lock-reset"
-              @click="openResetPasswordDialog(item)"
-            />
-            <v-btn
-              v-if="item.status !== 'deleted'"
-              size="small"
-              variant="text"
-              color="error"
-              icon="mdi-delete"
-              @click="deleteUser(item)"
-            />
+            <v-btn size="small" variant="text" color="success" icon="mdi-cash-plus" @click="openDepositDialog(item)" />
+            <v-btn size="small" variant="text" color="info" icon="mdi-information-outline"
+              @click="openUserDetailsDialog(item)" />
+            <v-btn v-if="item.status === 'active'" size="small" variant="text" color="warning" icon="mdi-pause"
+              @click="suspendUser(item)" />
+            <v-btn v-if="item.status === 'suspended'" size="small" variant="text" color="success" icon="mdi-play"
+              @click="activateUser(item)" />
+            <v-btn size="small" variant="text" color="info" icon="mdi-lock-reset"
+              @click="openResetPasswordDialog(item)" />
+            <v-btn v-if="item.status !== 'deleted'" size="small" variant="text" color="error" icon="mdi-delete"
+              @click="deleteUser(item)" />
           </div>
         </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-card>
 
-    <!-- Create User Dialog -->
-    <AdminCreateUserDialog
-      v-model="showCreateDialog"
-      @created="handleUserCreated"
-    />
+    <!-- ユーザー作成ダイアログ -->
+    <AdminCreateUserDialog v-model="showCreateDialog" @created="handleUserCreated" />
 
-    <!-- Reset Password Dialog -->
-    <AdminResetPasswordDialog
-      v-model="showResetPasswordDialog"
-      :user="selectedUser"
-      @reset="handlePasswordReset"
-    />
+    <!-- パスワードリセットダイアログ -->
+    <AdminResetPasswordDialog v-model="showResetPasswordDialog" :user="selectedUser" @reset="handlePasswordReset" />
 
-    <!-- Deposit Dialog -->
-    <AdminCreateTransactionDialog
-      v-model="showDepositDialog"
-      :users="users"
-      :preselected-user-id="selectedUserForDeposit?.user_id"
-      default-transaction-type="deposit"
-      default-reason="クレジットボーナス"
-      @created="handleDepositCreated"
-    />
+    <!-- 入金ダイアログ -->
+    <AdminCreateTransactionDialog v-model="showDepositDialog" :users="users"
+      :preselected-user-id="selectedUserForDeposit?.user_id" default-transaction-type="deposit"
+      default-reason="クレジットボーナス" @created="handleDepositCreated" />
 
-    <!-- User Details Dialog -->
-    <AdminUserDetailsDialog
-      v-model="showUserDetailsDialog"
-      :user="selectedUserForDetails"
-    />
+    <!-- ユーザー詳細ダイアログ -->
+    <AdminUserDetailsDialog v-model="showUserDetailsDialog" :user="selectedUserForDetails" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { User } from '~/types'
+import type { User, PaginatedResponse } from '~/types'
 
 const logger = useLogger({ prefix: '[PAGE-ADMIN-USERS]' })
 const apiClient = useApiClient()
@@ -182,9 +98,12 @@ useHead({
 
 const { showSuccess, showError } = useNotification()
 
-// State
+// 状態（State）
 const users = ref<User[]>([])
+const totalUsers = ref(0)
 const loading = ref(false)
+const itemsPerPage = ref(20)
+const page = ref(1)
 const selectedStatus = ref('all')
 const searchQuery = ref('')
 const showCreateDialog = ref(false)
@@ -195,7 +114,7 @@ const selectedUserForDeposit = ref<User | null>(null)
 const showUserDetailsDialog = ref(false)
 const selectedUserForDetails = ref<User | null>(null)
 
-// Options
+// オプション
 const statusOptions = [
   { title: 'すべて', value: 'all' },
   { title: 'アクティブ', value: 'active' },
@@ -203,7 +122,7 @@ const statusOptions = [
   { title: '削除済み', value: 'deleted' }
 ]
 
-// Table headers
+// テーブルヘッダー
 const headers = [
   { title: '名前', key: 'name', sortable: true },
   { title: 'メールアドレス', key: 'email', sortable: true },
@@ -213,34 +132,27 @@ const headers = [
   { title: 'アクション', key: 'actions', sortable: false, width: 200 }
 ]
 
-// Computed
-const filteredUsers = computed(() => {
-  let filtered = users.value
+// 算出プロパティ（Computed）
+// サーバーサイドフィルタリングに移行するため削除
 
-  // Filter by status
-  if (selectedStatus.value !== 'all') {
-    filtered = filtered.filter(user => user.status === selectedStatus.value)
-  }
-
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
-      user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
-    )
-  }
-
-  return filtered
-})
-
-// Methods
+// メソッド
 const loadUsers = async () => {
   loading.value = true
   try {
-    const response = await apiClient.get<{ items: User[] }>('/admin/users')
+    const params: Record<string, any> = {
+      page: page.value,
+      limit: itemsPerPage.value
+    }
+    if (selectedStatus.value && selectedStatus.value !== 'all') {
+      params.status = selectedStatus.value
+    }
+    if (searchQuery.value && searchQuery.value.trim() !== '') {
+      params.search = searchQuery.value.trim()
+    }
+    const response = await apiClient.get<PaginatedResponse<User>>('/admin/users', { params })
     const data = response.data!
     users.value = data.items
+    totalUsers.value = data.total
   } catch (error) {
     logger.error('ユーザー一覧の読み込みに失敗しました:', error)
     showError('ユーザー一覧の取得に失敗しました')
@@ -248,6 +160,17 @@ const loadUsers = async () => {
     loading.value = false
   }
 }
+
+const handleOptionsUpdate = (options: any) => {
+  page.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  loadUsers()
+}
+
+watch([selectedStatus, searchQuery], () => {
+  page.value = 1
+  loadUsers()
+})
 
 const suspendUser = async (user: User) => {
   try {
@@ -317,7 +240,7 @@ const openUserDetailsDialog = (user: User) => {
   showUserDetailsDialog.value = true
 }
 
-// Utility functions
+// ユーティリティ関数
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'active': return 'success'
@@ -346,7 +269,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-// Load users on mount
+// マウント時にユーザーを読み込む
 onMounted(() => {
   loadUsers()
 })
