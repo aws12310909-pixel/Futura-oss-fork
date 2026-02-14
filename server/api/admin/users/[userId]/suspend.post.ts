@@ -4,7 +4,7 @@ import { getDynamoDBService } from '~/server/utils/dynamodb'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Require admin permission
+    // 管理者権限が必要
     await requirePermission(event, 'user:update')
 
     const userId = getRouterParam(event, 'userId')
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     const dynamodb = getDynamoDBService()
     const tableName = dynamodb.getTableName('users')
 
-    // Get user from DynamoDB to get email
+    // メールアドレス取得のためDynamoDBからユーザーを取得
     const user = await dynamodb.get(tableName, { user_id: userId })
     
     if (!user) {
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Disable user in Cognito
+    // Cognitoでユーザーを無効化
     const disableUserCommand = new AdminDisableUserCommand({
       UserPoolId: config.cognitoUserPoolId as string,
       Username: user.email
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
 
     await cognitoClient.send(disableUserCommand)
 
-    // Update user status in DynamoDB
+    // DynamoDBでユーザーステータスを更新
     const updatedUser = await dynamodb.update(
       tableName,
       { user_id: userId },

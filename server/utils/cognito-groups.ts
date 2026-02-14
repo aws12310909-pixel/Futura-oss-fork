@@ -387,7 +387,7 @@ export const listUsersInGroup = async (groupName: string): Promise<User[]> => {
       return []
     }
     
-    // Get user details from DynamoDB
+    // DynamoDBからユーザー詳細を取得
     const dynamodb = getDynamoDBService()
     const usersTableName = dynamodb.getTableName('users')
     

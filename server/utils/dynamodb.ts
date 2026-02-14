@@ -4,7 +4,7 @@ import type { RuntimeConfig } from '@nuxt/schema'
 import { createDynamoDBDocumentClient } from './client-factory'
 import { useLogger } from '~/composables/useLogger'
 
-// Type for DynamoDB document values
+// DynamoDBドキュメント値の型
 type DynamoDBValue = string | number | boolean | null | DynamoDBValue[] | { [key: string]: DynamoDBValue }
 type DynamoDBRecord = Record<string, DynamoDBValue>
 
@@ -26,7 +26,7 @@ class DynamoDBService {
     }
   }
 
-  // Generic CRUD operations
+  // 汎用的なCRUD操作
   async get(tableName: string, key: DynamoDBRecord) {
     const command = new GetCommand({
       TableName: tableName,
@@ -167,7 +167,7 @@ class DynamoDBService {
     }
   }
 
-  // Helper methods for specific tables
+  // 特定のテーブル用のヘルパーメソッド
   getTableName(table: 'users' | 'transactions' | 'market_rates' | 'sessions' | 'permissions' | 'batch_operations'): string {
     const tableMap = {
       'users': this.config.dynamodbUsersTable,
@@ -196,7 +196,7 @@ class DynamoDBService {
     return tableName
   }
 
-  // Transaction operations
+  // トランザクション操作
   async transactWrite(items: Array<{
     Put?: { TableName: string; Item: Record<string, unknown> }
     Update?: { TableName: string; Key: DynamoDBRecord; UpdateExpression: string; ExpressionAttributeValues: DynamoDBRecord; ExpressionAttributeNames?: Record<string, string> }
@@ -211,7 +211,7 @@ class DynamoDBService {
   }
 }
 
-// Create singleton instance
+// シングルトンインスタンスの作成
 let dynamoService: DynamoDBService
 
 export const getDynamoDBService = () => {
